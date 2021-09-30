@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const index = () => {
+const Index = () => {
   return (
     <div>
       <Link href="/auth/signin">Sign In</Link>
@@ -8,4 +8,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default Index;

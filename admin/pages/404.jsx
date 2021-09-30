@@ -1,6 +1,8 @@
 import { Heading, HStack, Stack, Text, VStack } from "@chakra-ui/react";
 import { UilLinkBroken } from "@iconscout/react-unicons";
 
+import Blank from "../layouts/blank";
+
 const Custom404 = () => {
   return (
     <Stack
@@ -40,6 +42,10 @@ const Custom404 = () => {
       </VStack>
     </Stack>
   );
+};
+
+Custom404.getLayout = function getLayout(page) {
+  return <Blank>{page}</Blank>;
 };
 
 export default Custom404;

@@ -10,8 +10,9 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
+import Blank from "../../src/layouts/blank";
 
-function Forgot() {
+const Forgot = (props) => {
   const toast = useToast();
   return (
     <Stack
@@ -31,11 +32,18 @@ function Forgot() {
         rounded="lg"
         spacing={4}
         alignItems="stretch"
-        w={{ base: "full", md: "auto" }}
+        w={{ base: "full", md: "md" }}
       >
         <VStack w="full" alignItems="flex-start" spacing={0}>
-          <Text color="gray.500">Priority Rewards</Text>
-          <Heading size="lg">The Mall at Stonecrest</Heading>
+          <Text color="gray.500" align="center" w="full">
+            {props.franchise.displayTitle.superTitle}
+          </Text>
+          <Heading size="lg" align="center" w="full">
+            {props.franchise.displayTitle.title}
+          </Heading>
+          <Text color="gray.500" align="center" w="full">
+            {props.franchise.displayTitle.subtitle}
+          </Text>
         </VStack>
         <FormControl as="fieldset" isRequired>
           <FormLabel as="legend">Email Address</FormLabel>
@@ -65,6 +73,31 @@ function Forgot() {
       </VStack>
     </Stack>
   );
+};
+
+Forgot.getLayout = (page) => {
+  return <Blank>{page}</Blank>;
+};
+
+export async function getServerSideProps(context) {
+  const slug = context.req.headers.host.toLowerCase().split(".")[0];
+
+  if (slug !== "admin") {
+    const url = `https://${slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/franchise/`;
+    const res = await fetch(url);
+    const franchiseData = await res.json();
+    console.log(franchiseData);
+    if (franchiseData === null) {
+      context.res.statusCode = 404;
+      return { props: {} };
+    } else {
+      return { props: { franchise: franchiseData } };
+    }
+  } else {
+    return {
+      props: { franchise: require("../../lib/constants/admin-franchise.json") },
+    };
+  }
 }
 
 export default Forgot;
