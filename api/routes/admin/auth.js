@@ -2,6 +2,79 @@ const bcrypt = require("bcrypt");
 const { add, getUnixTime } = require("date-fns");
 
 module.exports = async function (fastify, options) {
+  fastify.get(
+    "/",
+    {
+      schema: {
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              account: {
+                type: "object",
+                properties: {
+                  _id: { type: "string" },
+                  email: { type: "string" },
+                  firstName: { type: "string" },
+                  lastName: { type: "string" },
+                },
+              },
+              franchise: {
+                type: "object",
+                properties: {
+                  _id: { type: "string" },
+                  name: { type: "string" },
+                  slug: { type: "string" },
+                  displayTitle: {
+                    type: "object",
+                    properties: {
+                      superTitle: { type: "string" },
+                      title: { type: "string" },
+                      subtitle: { type: "string" },
+                    },
+                  },
+                },
+              },
+              token: {
+                type: "object",
+                properties: {
+                  expiresAt: { type: "number" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      if (req.headers.authorization === undefined) {
+        reply.code(400).send({ error: "A user must be authenticated." });
+        return;
+      }
+      const sessionId = this.jwt.decode(
+        req.headers.authorization.replace("Bearer ", "")
+      ).session;
+      const session = await this.db.adminSession.findOne({ _id: sessionId });
+      if (!session || session.expiresAt < new Date() / 1000) {
+        reply.code(400).send({ error: "User session has expired." });
+      } else {
+        const adminAccount = await this.db.adminAccount.findOne({
+          _id: session.account,
+        });
+        const franchise = await this.db.franchise.findOne({
+          _id: session.franchise,
+        });
+        reply.code(200).send({
+          account: adminAccount,
+          franchise,
+          token: {
+            expiresAt: session.expiresAt,
+          },
+        });
+      }
+    }
+  );
+
   fastify.post(
     "/signin/",
     {
@@ -84,7 +157,6 @@ module.exports = async function (fastify, options) {
             { session: session._id },
             { expiresIn: process.env.JWT_TTL }
           );
-          console.log(key);
           reply.code(200).send({
             ...adminAccount.toJSON(),
             token: {
