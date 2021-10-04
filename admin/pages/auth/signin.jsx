@@ -9,7 +9,6 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  Spinner,
   Stack,
   Switch,
   Text,
@@ -19,6 +18,7 @@ import {
 import { UilEye, UilEyeSlash } from "@iconscout/react-unicons";
 
 import Blank from "../../layouts/blank";
+import { useAccountStore, useAPIStore, useFranchiseStore } from "../../store";
 
 const SignIn = (props) => {
   const [email, setEmail] = useState("");
@@ -27,7 +27,16 @@ const SignIn = (props) => {
   const [saveToken, setSaveToken] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordClick = () => setShowPassword(!showPassword);
+
+  const setAccount = useAccountStore((state) => state.setAccount);
+  const setSlug = useAPIStore((state) => state.setSlug);
+  const setToken = useAPIStore((state) => state.setToken);
+  const setFranchise = useFranchiseStore((state) => state.setFranchise);
   const toast = useToast();
+
+  useEffect(() => {
+    setSlug(props.franchise.slug);
+  }, []);
 
   const attemptSignin = async (e) => {
     e.preventDefault();
@@ -48,34 +57,23 @@ const SignIn = (props) => {
       );
       const data = await res.json();
       if (res.ok) {
-        toast({
-          title: "Successful Login",
-          description:
-            "Welcome to Priority Rewards. Your session will be saved for 30 days.",
-          status: "success",
-          duration: 9000,
-          isClosable: true,
-        });
-        window.sessionStorage.setItem("franchise-slug", props.franchise.slug);
-        window.sessionStorage.setItem(
-          `${props.franchise.slug}-token`,
-          data.token.key
-        );
-        window.sessionStorage.setItem(
+        setFranchise(data.franchise);
+        delete data.franchise;
+        setToken(data.token);
+        sessionStorage.setItem(`${props.franchise.slug}-token`, data.token.key);
+        sessionStorage.setItem(
           `${props.franchise.slug}-token-expiry`,
           data.token.expiresAt
         );
         if (saveToken) {
-          window.localStorage.setItem("franchise-slug", props.franchise.slug);
-          window.localStorage.setItem(
-            `${props.franchise.slug}-token`,
-            data.token.key
-          );
-          window.localStorage.setItem(
+          localStorage.setItem(`${props.franchise.slug}-token`, data.token.key);
+          localStorage.setItem(
             `${props.franchise.slug}-token-expiry`,
             data.token.expiresAt
           );
         }
+        delete data.token;
+        setAccount(data);
         router.push("/");
       } else {
         toast({
