@@ -10,7 +10,7 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import Blank from "../../src/layouts/blank";
+import Blank from "../../layouts/blank";
 
 const Forgot = (props) => {
   const toast = useToast();
