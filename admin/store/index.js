@@ -31,12 +31,18 @@ let franchiseStore = (set) => ({
   setFranchise: (franchise) => {
     set(() => ({ franchise: { ...franchise } }));
   },
+  reset: () => {
+    set(() => ({ franchise: {} }));
+  },
 });
 
 let accountStore = (set) => ({
   account: {},
   setAccount: (account) => {
     set(() => ({ account: { ...account } }));
+  },
+  reset: () => {
+    set(() => ({ account: {} }));
   },
 });
 

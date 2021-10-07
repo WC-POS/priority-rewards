@@ -1,4 +1,5 @@
 import NextLink from "next/link";
+import { useRouter } from "next/router";
 
 import {
   Avatar,
@@ -41,7 +42,7 @@ import {
   UilUserCircle,
 } from "@iconscout/react-unicons";
 
-import { useAccountStore, useFranchiseStore } from "../store";
+import { useAccountStore, useAPIStore, useFranchiseStore } from "../store";
 import NotificationsDrawer from "./notifications-drawer";
 
 const FranchiseGroup = () => {
@@ -123,15 +124,30 @@ const Navbar = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const account = useAccountStore((state) => state.account);
   const franchise = useFranchiseStore((state) => state.franchise);
+  const resetAccount = useAccountStore((state) => state.reset);
+  const resetAPI = useAPIStore((state) => state.reset);
+  const resetFranchise = useFranchiseStore((state) => state.reset);
+  const router = useRouter();
+
+  const signOut = async () => {
+    localStorage.removeItem(`${franchise.slug}-token`);
+    localStorage.removeItem(`${franchise.slug}-token-expiry`);
+    sessionStorage.removeItem(`${franchise.slug}-token`);
+    sessionStorage.removeItem(`${franchise.slug}-token-expiry`);
+    resetAccount();
+    resetAPI();
+    resetFranchise();
+    router.push("/auth/signin/");
+  };
+
   return (
     <>
       <Flex
         w="full"
         px={4}
-        py={1}
+        py={2}
         boxShadow="md"
         bgColor="white"
-        borderRadius="md"
         alignItems="center"
       >
         <Menu isLazy>
@@ -232,12 +248,19 @@ const Navbar = () => {
                   spacing="1px"
                   ml="2"
                 >
-                  <Text fontSize="sm">
-                    {account.firstName} {account.lastName}
-                  </Text>
-                  <Text fontSize="xs" color="gray.600">
-                    {franchise.displayTitle.title}
-                  </Text>
+                  {Object.keys(account).length &&
+                  Object.keys(franchise).length ? (
+                    <>
+                      <Text fontSize="sm">
+                        {account.firstName} {account.lastName}
+                      </Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {franchise.displayTitle.title}
+                      </Text>
+                    </>
+                  ) : (
+                    <></>
+                  )}
                 </VStack>
                 <Box display={{ base: "none", md: "flex" }}>
                   <UilAngleDown />
@@ -245,10 +268,20 @@ const Navbar = () => {
               </HStack>
             </MenuButton>
             <MenuList bg={"white"} borderColor={"gray.200"}>
-              <MenuItem icon={<UilUserCircle />}>Profile</MenuItem>
-              <MenuItem icon={<UilSetting />}>Settings</MenuItem>
+              <NextLink href="/account/" passHref>
+                <MenuItem icon={<UilUserCircle />} as="a">
+                  Profile
+                </MenuItem>
+              </NextLink>
+              <NextLink href="/account/settings/" passHref>
+                <MenuItem icon={<UilSetting />} as="a">
+                  Settings
+                </MenuItem>
+              </NextLink>
               <MenuDivider />
-              <MenuItem icon={<UilSignOutAlt />}>Sign out</MenuItem>
+              <MenuItem icon={<UilSignOutAlt />} onClick={signOut}>
+                Sign out
+              </MenuItem>
             </MenuList>
           </Menu>
         </Flex>

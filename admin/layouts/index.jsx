@@ -69,14 +69,25 @@ const Layout = ({ children }) => {
         direction="column"
         w="100vw"
         h="100vh"
-        p={4}
-        spacing={4}
+        spacing={8}
         bg="gray.100"
         alignItems="start"
         justifyContent="start"
       >
         <Navbar />
-        <main>{children}</main>
+        <Stack
+          direction="column"
+          w="full"
+          h="100vh"
+          p={4}
+          spacing={4}
+          bg="gray.100"
+          alignItems="start"
+          justifyContent="start"
+          as="main"
+        >
+          {children}
+        </Stack>
       </Stack>
     );
   } else {
