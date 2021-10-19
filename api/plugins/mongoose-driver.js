@@ -64,6 +64,7 @@ async function moongooseDriver(fastify, opts, done) {
       );
       let model = decorator.db.model(modelFile.name, modelSchema);
       decorator[[modelFile.alias ? modelFile.alias : modelFile.name]] = model;
+      console.log(model);
 
       // Analyze Model Schema to generate Fastify Schema
       let paths = model.schema.paths;
@@ -104,7 +105,13 @@ async function moongooseDriver(fastify, opts, done) {
             fastifySchema.required.push(path);
           }
           if (schema.options.nullable !== undefined) {
-            fastifySchema.properties[path].nullable = schema.options.nullable;
+            if (path.includes(".")) {
+              fastifySchema.properties[path.split(".")[0]].properties[
+                path.split(".")[1]
+              ].nullable = schema.options.nullable;
+            } else {
+              fastifySchema.properties[path].nullable = schema.options.nullable;
+            }
           }
           if (schema.enumValues && schema.enumValues.length) {
             fastifySchema.properties[path].enum = schema.enumValues;
