@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
-const { add, getUnixTime } = require("date-fns");
+const { add, getUnixTime, formatDuration } = require("date-fns");
+const short = require("short-uuid");
 
 module.exports = async function (fastify, options) {
   fastify.get(
@@ -177,6 +178,105 @@ module.exports = async function (fastify, options) {
           error: "A user with that email and password could not be found.",
         });
       }
+    }
+  );
+
+  fastify.post(
+    "/temp/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        response: {
+          "2xx": {
+            type: "object",
+            properties: {
+              _id: { type: "string" },
+              createdAt: { type: "number" },
+              expiresAt: { type: "number" },
+            },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      let code = short.generate().slice(0, 4);
+      await fastify.db.adminTempAuthCode.updateMany(
+        { account: req.adminAccount._id, franchise: req.scope.franchise._id },
+        { isValid: false }
+      );
+      let adminTempAuthCode = await fastify.db.adminTempAuthCode.create({
+        account: req.adminAccount._id,
+        franchise: req.scope.franchise._id,
+        code: await bcrypt.hash(code, Number(process.env.TEMP_AUTH_SALT)),
+        expiresAt: getUnixTime(new Date()) + Number(process.env.TEMP_AUTH_TTL),
+      });
+      let messageInfo = await fastify.mail.transporter.sendMail({
+        from: fastify.mail.fromEmail,
+        to: `'${req.adminAccount.fullName} <${req.adminAccount.email}>'`,
+        subject: "🔐 PriorityRewards Edit Unlock",
+        text: `Your unlock code is the following: ${code}. This code will expire in ${
+          Number(process.env.TEMP_AUTH_TTL) / 60
+        } minutes.`,
+        html: `<p>Your unlock code is the following: <b>${code}</b>.</p>
+        <p>This code will expire in ${
+          Number(process.env.TEMP_AUTH_TTL) / 60
+        } minutes.</p>
+        <br />
+        <p><i>This email is not monitored. Please direct all support inquiries to support@priorityrewards.com.</i></p>`,
+      });
+      adminTempAuthCode.messageId = messageInfo.messageId;
+      adminTempAuthCode.save();
+      reply.code(200).send({
+        createdAt: adminTempAuthCode.createdAt,
+        expiresAt: adminTempAuthCode.expiresAt,
+      });
+    }
+  );
+
+  fastify.post(
+    "/temp/redeem/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        body: {
+          type: "object",
+          properties: {
+            code: { type: "string" },
+          },
+          required: ["code"],
+        },
+      },
+    },
+    async function (req, reply) {
+      let adminAuthTempCode = await fastify.db.adminTempAuthCode.findOne({
+        account: req.adminAccount._id,
+        franchise: req.scope.franchise._id,
+        isValid: true,
+        isRedeemed: false,
+      });
+      if (adminAuthTempCode) {
+        let isValidCode = await bcrypt.compare(
+          req.body.code,
+          adminAuthTempCode.code
+        );
+        if (isValidCode) {
+          adminAuthTempCode.isRedeemed = true;
+          adminAuthTempCode.isValid = true;
+          adminAuthTempCode.save();
+          reply.code(200).send();
+        } else {
+          reply.code(401).send({
+            error:
+              "A valid temporary code could not be found for this account.",
+          });
+        }
+      } else {
+        reply.code(401).send({
+          error: "A valid temporary code could not be found for this account.",
+        });
+      }
+      console.log(adminAuthTempCode);
+      reply.code(200).send();
     }
   );
 };
