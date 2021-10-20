@@ -134,10 +134,9 @@ const Navbar = () => {
     localStorage.removeItem(`${franchise.slug}-token-expiry`);
     sessionStorage.removeItem(`${franchise.slug}-token`);
     sessionStorage.removeItem(`${franchise.slug}-token-expiry`);
+    router.push("/auth/signin/");
     resetAccount();
     resetAPI();
-    resetFranchise();
-    router.push("/auth/signin/");
   };
 
   return (
