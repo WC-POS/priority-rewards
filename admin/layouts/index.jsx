@@ -1,4 +1,4 @@
-import { Stack } from "@chakra-ui/react";
+import { Container, Stack } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 import Navbar from "../components/navbar";
@@ -7,6 +7,7 @@ import { useAccountStore, useAPIStore, useFranchiseStore } from "../store";
 
 const Layout = ({ children }) => {
   const account = useAccountStore((state) => state.account);
+  const [errorRedirect, setErrorRedirect] = useState(false);
   const setAccount = useAccountStore((state) => state.setAccount);
   const setFranchise = useFranchiseStore((state) => state.setFranchise);
   const setSlug = useAPIStore((state) => state.setSlug);
@@ -33,22 +34,27 @@ const Layout = ({ children }) => {
           expiry = localStorage.getItem(`${slug}-token-expiry`);
         }
       }
-      console.log(token);
       if (token) {
         if (expiry > new Date() / 1000) {
-          const res = await fetch(`https://${slug}.api.lvh.me/admin/auth/`, {
-            headers: { authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            let data = await res.json();
-            setAccount(data.account);
-            setFranchise(data.franchise);
-            setSlug(slug);
-            setToken({
-              key: token,
-              expiresAt: data.token.expiresAt,
+          try {
+            const res = await fetch(`https://${slug}.api.lvh.me/admin/auth/`, {
+              headers: { authorization: `Bearer ${token}` },
             });
-            setAccountVerified(true);
+            if (res.ok) {
+              let data = await res.json();
+              setAccount(data.account);
+              setFranchise(data.franchise);
+              setSlug(slug);
+              setToken({
+                key: token,
+                expiresAt: data.token.expiresAt,
+              });
+              setAccountVerified(true);
+            }
+          } catch (err) {
+            console.log(err);
+            setAccountVerified(false);
+            setErrorRedirect(true);
           }
         } else {
           sessionStorage.removeItem(`${slug}-token`);
@@ -68,28 +74,38 @@ const Layout = ({ children }) => {
       <Stack
         direction="column"
         w="100vw"
-        h="100vh"
-        spacing={8}
+        minH="100vh"
+        spacing={4}
         bg="gray.100"
         alignItems="start"
         justifyContent="start"
       >
         <Navbar />
         <Stack
-          direction="column"
           w="full"
-          h="100vh"
-          p={4}
-          spacing={4}
-          bg="gray.100"
-          alignItems="start"
-          justifyContent="start"
-          as="main"
+          direction="column"
+          justifyContent="center"
+          alignItems="flex-start"
+          p={{ base: 0, md: 4 }}
         >
-          {children}
+          <Container centerContent as="main" maxW="container.xl">
+            <Stack
+              direction="column"
+              w="full"
+              h="full"
+              spacing={4}
+              pb={8}
+              alignItems="start"
+              justifyContent="center"
+            >
+              {children}
+            </Stack>
+          </Container>
         </Stack>
       </Stack>
     );
+  } else if (errorRedirect) {
+    return <Redirect to="/404" />;
   } else {
     return <Redirect to="/auth/signin" />;
   }
