@@ -217,18 +217,27 @@ export async function getServerSideProps(context) {
   const slug = context.req.headers.host.toLowerCase().split(".")[0];
 
   if (slug !== "admin") {
-    const url = `https://${slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/franchise/`;
-    const res = await fetch(url);
-    const franchiseData = await res.json();
-    if (franchiseData === null) {
-      context.res.statusCode = 404;
+    try {
+      const url = `https://${slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/franchise/`;
+      const res = await fetch(url);
+      const franchiseData = await res.json();
+      if (franchiseData === null) {
+        context.res.statusCode = 404;
+        return {
+          props: {
+            statusCode: 404,
+          },
+        };
+      } else {
+        return { props: { franchise: franchiseData } };
+      }
+    } catch (err) {
+      console.log(err);
       return {
         props: {
           statusCode: 404,
         },
       };
-    } else {
-      return { props: { franchise: franchiseData } };
     }
   } else {
     return {
