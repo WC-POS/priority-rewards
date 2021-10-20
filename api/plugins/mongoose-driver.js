@@ -114,11 +114,17 @@ async function moongooseDriver(fastify, opts, done) {
             }
           }
           if (schema.enumValues && schema.enumValues.length) {
-            fastifySchema.properties[path].enum = schema.enumValues;
+            if (path.includes(".")) {
+              fastifySchema.properties[path.split(".")[0]].properties[
+                path.split(".")[1]
+              ].enum = schema.enumValues;
+            } else {
+              fastifySchema.properties[path].enum = schema.enumValues;
+            }
           }
         }
       }
-      fastify.addSchema(fastifySchema);
+      fastify.addSchema(fastifySchema, fastifySchema.$id);
     });
   } catch (err) {
     throw new Error(err);

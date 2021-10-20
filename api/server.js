@@ -39,6 +39,7 @@ const start = async () => {
     app.register(require("fastify-cors"), {
       origin: [/\.lvh\.me$/],
     });
+    app.register(require("./plugins/multer-wrapper"));
     app.register(require("./plugins/mongoose-driver"), {
       uri: `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_SERVER}/${process.env.MONGO_DB}?authSource=${process.env.MONGO_AUTH}&readPreference=primary&ssl=false`,
       useNameAndAlias: true,
