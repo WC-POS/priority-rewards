@@ -27,12 +27,13 @@ module.exports = async function (fastify, options) {
                   name: { type: "string" },
                   slug: { type: "string" },
                   displayTitle: {
-                    type: "object",
-                    properties: {
-                      superTitle: { type: "string" },
-                      title: { type: "string" },
-                      subtitle: { type: "string" },
-                    },
+                    $ref: "models-franchises#/properties/displayTitle",
+                  },
+                  documents: {
+                    $ref: "models-franchises#/properties/documents",
+                  },
+                  logo: {
+                    $ref: "models-franchises#/properties/logo",
                   },
                 },
               },
@@ -90,7 +91,7 @@ module.exports = async function (fastify, options) {
           required: ["email", "password"],
         },
         response: {
-          "2xx": {
+          200: {
             type: "object",
             properties: {
               _id: { type: "string" },
@@ -111,12 +112,13 @@ module.exports = async function (fastify, options) {
                   name: { type: "string" },
                   slug: { type: "string" },
                   displayTitle: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      superTitle: { type: "string" },
-                      subtitle: { type: "string" },
-                    },
+                    $ref: "models-franchises#/properties/displayTitle",
+                  },
+                  documents: {
+                    $ref: "models-franchises#/properties/documents",
+                  },
+                  logo: {
+                    $ref: "models-franchises#/properties/logo",
                   },
                 },
               },
