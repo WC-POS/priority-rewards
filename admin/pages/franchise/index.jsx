@@ -39,6 +39,7 @@ const Index = () => {
   const fetchPost = useAPIStore((state) => state.fetchPost);
   const fetchUpload = useAPIStore((state) => state.fetchUpload);
   const franchise = useFranchiseStore((state) => state.franchise);
+  const setFranchise = useFranchiseStore((state) => state.setFranchise);
   const [isLocked, setIsLocked] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const eulaFile = useRef();
@@ -107,9 +108,10 @@ const Index = () => {
 
   const onSave = async () => {
     if (detail.name && detail.displayTitle.title) {
-      setStatus("loading");
       const res = await fetchPost("/admin/franchise/", detail, true);
-      if (res.ok) {
+      const refreshRes = await fetchGet("/admin/franchise/");
+      if (res.ok && refreshRes.ok) {
+        setFranchise(refreshRes.body);
         toast({
           title: "Franchise Updated",
           description: "Franchise details have been saved.",
@@ -117,7 +119,6 @@ const Index = () => {
           duration: 7000,
           isClosable: true,
         });
-        setStatus("loaded");
         setIsLocked(true);
       } else {
         toast({
@@ -127,7 +128,6 @@ const Index = () => {
           duration: 7000,
           isClosable: true,
         });
-        setStatus("loaded");
         console.log(res.error);
       }
     } else {
