@@ -35,6 +35,9 @@ module.exports = async function (fastify, options) {
                   logo: {
                     $ref: "models-franchises#/properties/logo",
                   },
+                  services: {
+                    $ref: "models-franchises#/properties/services",
+                  },
                 },
               },
               token: {
@@ -119,6 +122,9 @@ module.exports = async function (fastify, options) {
                   },
                   logo: {
                     $ref: "models-franchises#/properties/logo",
+                  },
+                  services: {
+                    $ref: "models-franchises#/properties/services",
                   },
                 },
               },
