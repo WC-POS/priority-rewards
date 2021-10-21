@@ -12,7 +12,7 @@ module.exports = {
       street2: { type: String, default: "" },
       city: { type: String, default: "" },
       state: { type: String, default: "" },
-      zipCpde: { type: String, default: "" },
+      zipCode: { type: String, default: "" },
     },
     contact: {
       website: { type: String, default: "" },
@@ -54,5 +54,8 @@ module.exports = {
       private: { type: String, default: "" },
     },
     slug: { type: String },
+  },
+  schemaOptions: {
+    timestamps: true,
   },
 };
