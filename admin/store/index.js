@@ -9,7 +9,7 @@ let apiStore = (set, get) => ({
       expiresAt: null,
     },
   },
-  fetchGet: async (endpoint, options = {}) => {
+  fetchGet: async (endpoint, body = null) => {
     const urlPoints = endpoint
       .trim()
       .split("/")
@@ -17,17 +17,20 @@ let apiStore = (set, get) => ({
     let state = get();
     let payload = {};
     try {
+      let params = {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${state.token.key}`,
+        },
+      };
+      if (body) {
+        params.body = body;
+      }
       const res = await fetch(
         `https://${state.slug}.${
           process.env.NEXT_PUBLIC_API_HOST
         }/${urlPoints.join("/")}/`,
-        {
-          method: "GET",
-          headers: {
-            authorization: `Bearer ${state.token.key}`,
-            ...options.headers,
-          },
-        }
+        params
       );
       try {
         const data = await res.json();
