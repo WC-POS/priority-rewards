@@ -47,7 +47,8 @@ module.exports = async function (fastify, options) {
     async function (req, reply) {
       const franchise = await fastify.db.franchise.findOneAndUpdate(
         { _id: req.scope.franchise._id },
-        { $set: req.body }
+        { $set: req.body },
+        { new: true }
       );
       reply.code(200).send(franchise.toJSON());
     }
@@ -72,6 +73,7 @@ module.exports = async function (fastify, options) {
     "/upload/logo/",
     {
       preHandler: fastify.upload.single("logo"),
+      preValidation: [fastify.guards.isAdminAuthenticated],
     },
     async function (req, reply) {
       if (req.file) {
@@ -104,6 +106,7 @@ module.exports = async function (fastify, options) {
     "/upload/EULA/",
     {
       preHandler: fastify.upload.single("EULA"),
+      preValidation: [fastify.guards.isAdminAuthenticated],
     },
     async function (req, reply) {
       if (req.file) {
@@ -136,6 +139,7 @@ module.exports = async function (fastify, options) {
     "/upload/terms/",
     {
       preHandler: fastify.upload.single("terms"),
+      preValidation: [fastify.guards.isAdminAuthenticated],
     },
     async function (req, reply) {
       if (req.file) {
@@ -210,7 +214,8 @@ module.exports = async function (fastify, options) {
       try {
         const location = await fastify.db.location.findOneAndUpdate(
           { _id: req.params.id },
-          { $set: req.body }
+          { $set: req.body },
+          { new: true }
         );
         reply.code(200).send(location.toJSON());
       } catch (err) {
@@ -223,6 +228,7 @@ module.exports = async function (fastify, options) {
     "/location/:id/upload/previewImage/",
     {
       preHandler: fastify.upload.single("previewImage"),
+      preValidation: [fastify.guards.isAdminAuthenticated],
     },
     async function (req, reply) {
       let isValidLocation = false;
