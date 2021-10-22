@@ -15,7 +15,6 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalFooter,
-  ModalHeader,
   ModalOverlay,
   Select,
   Stack,
@@ -300,13 +299,14 @@ const Locations = () => {
                       direction="row"
                       alignItems="center"
                       justifyContent="flex-start"
+                      spacing={2}
                     >
-                      <Text>{location.name}</Text>
                       {!location.isActive && (
-                        <Box rounded="full" p={1} bg="red.400">
-                          <UilCloudSlash size={16} />
+                        <Box color="red.500">
+                          <UilCloudSlash />
                         </Box>
                       )}
+                      <Text>{location.name}</Text>
                     </Stack>
                   </Td>
                   <Td>
