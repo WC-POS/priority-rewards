@@ -52,6 +52,7 @@ const start = async () => {
     app.register(require("./plugins/franchise-scope"));
     app.register(require("./plugins/s3-driver"));
     app.register(require("./plugins/admin-authentication"));
+    app.register(require("./plugins/paginate"));
     app.register(require("./plugins/route-loader"));
     app.listen(process.env.API_PORT, "0.0.0.0");
   } catch (err) {
