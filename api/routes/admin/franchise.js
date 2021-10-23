@@ -295,25 +295,24 @@ module.exports = async function (fastify, options) {
       },
     },
     async function (req, reply) {
-      const pageSize =
-        req.body && req.body.pageSize
-          ? req.body.pageSize
-          : process.env.PAGE_SIZE;
-      const page = req.body && req.body.page ? req.body.page : 1;
-      const list = await fastify.db.location
-        .find({ franchise: req.scope.franchise._id })
-        .sort({ name: 1 })
-        .skip(pageSize * (page - 1))
-        .limit(pageSize);
-      const queryCount = await fastify.db.location
-        .find({ franchise: req.scope.franchise._id })
-        .count();
-      reply.code(200).send({
-        count: queryCount,
-        page,
-        maxPage: Math.ceil(queryCount / pageSize),
-        results: list,
-      });
+      try {
+        const body = await fastify.paginate(
+          fastify.db.location
+            .find({ franchise: req.scope.franchise._id })
+            .sort({ name: 1 }),
+          {
+            page: req.body && req.body.page ? req.body.page : 1,
+            size:
+              req.body && req.body.pageSize
+                ? req.body.pageSize
+                : process.env.PAGE_SIZE,
+          }
+        );
+        reply.code(200).send(body);
+      } catch (err) {
+        console.log(err);
+        reply.code(500).send({ error: err });
+      }
     }
   );
   fastify.post(
