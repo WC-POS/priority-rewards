@@ -10,6 +10,7 @@ import {
   Heading,
   Input,
   IconButton,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -280,7 +281,14 @@ const Locations = () => {
           Add New
         </Button>
       </Stack>
-      <Stack bg="white" rounded="lg" shadow="md" w="full" pb={4}>
+      <Stack
+        bg="white"
+        rounded="lg"
+        shadow="md"
+        w="full"
+        pb={4}
+        overflowX="auto"
+      >
         <Table variant="striped">
           <Thead>
             <Tr>
@@ -306,10 +314,15 @@ const Locations = () => {
                           <UilCloudSlash />
                         </Box>
                       )}
-                      <Text>{location.name}</Text>
+                      <NextLink
+                        href={`/franchise/location/${location._id}/edit/`}
+                        passHref
+                      >
+                        <Link whiteSpace="nowrap">{location.name}</Link>
+                      </NextLink>
                     </Stack>
                   </Td>
-                  <Td>
+                  <Td whiteSpace="nowrap">
                     {location.address.street1} {location.address.street2},{" "}
                     {location.address.city}, {location.address.state}{" "}
                     {location.address.zipCode}
