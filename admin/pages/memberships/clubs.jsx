@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -19,7 +19,6 @@ import {
   NumberInputStepper,
   NumberInputField,
   NumberIncrementStepper,
-  Spinner,
   Stack,
   Switch,
   Table,
@@ -34,7 +33,6 @@ import {
 } from "@chakra-ui/react";
 import {
   UilBookmark,
-  UilCloudSlash,
   UilCreateDashboard,
   UilEditAlt,
   UilPricetagAlt,
@@ -59,6 +57,7 @@ const clubTemplate = {
 const ClubModal = (props) => {
   const [club, setClub] = useState(clubTemplate);
   const fetchPost = useAPIStore((state) => state.fetchPost);
+  const nameInput = useRef();
   const [status, setStatus] = useState("loaded");
   const toast = useToast();
 
@@ -145,6 +144,7 @@ const ClubModal = (props) => {
         onClose={props.onClose}
         size="lg"
         scrollBehavior="inside"
+        initialFocusRef={nameInput}
       >
         <ModalOverlay />
         <ModalContent p={4}>
@@ -158,6 +158,7 @@ const ClubModal = (props) => {
                   bg="gray.50"
                   onChange={(e) => setClub({ ...club, name: e.target.value })}
                   value={club.name}
+                  ref={nameInput}
                 />
               </FormControl>
               <FormControl p={2} bg="gray.50" rounded="md">
@@ -510,7 +511,17 @@ const Clubs = () => {
                         <UilStar />
                       </Box>
                     )}
-                    <Text whiteSpace="nowrap">{club.name}</Text>
+                    <Button
+                      variant="link"
+                      onClick={() => {
+                        setEditClub(club);
+                        onOpen();
+                      }}
+                      color={club.isActive ? "black" : "gray.400"}
+                      fontWeight={club.isEntryClub ? "semibold" : "normal"}
+                    >
+                      <Text whiteSpace="nowrap">{club.name}</Text>
+                    </Button>
                   </Stack>
                 </Td>
                 <Td isNumeric>{club.minimumPoints}</Td>
