@@ -65,7 +65,6 @@ const LocationEdit = (props) => {
         `/admin/franchise/location/${location._id}/upload/${e.target.name}/`,
         files
       );
-      console.log(res);
       if (res.ok) {
         setLocation({
           ...location,
