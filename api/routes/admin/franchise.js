@@ -131,8 +131,6 @@ module.exports = async function (fastify, options) {
           .code(400)
           .send({ error: "Please include a file in your upload." });
       }
-      console.log(res);
-      reply.code(200).send({ name: req.file.filename });
     }
   );
   fastify.post(
@@ -271,17 +269,13 @@ module.exports = async function (fastify, options) {
       preValidation: [fastify.guards.isAdminAuthenticated],
       schema: {
         body: {
-          type: ["object", "null"],
-          page: { type: "number" },
-          pageSize: { type: "number" },
+          $ref: "list-page-body#",
         },
         response: {
           200: {
             type: "object",
+            $ref: "list-page-response",
             properties: {
-              count: { type: "number" },
-              page: { type: "number" },
-              maxPage: { type: "number" },
               results: {
                 type: "array",
                 items: {
@@ -303,9 +297,7 @@ module.exports = async function (fastify, options) {
           {
             page: req.body && req.body.page ? req.body.page : 1,
             size:
-              req.body && req.body.pageSize
-                ? req.body.pageSize
-                : process.env.PAGE_SIZE,
+              req.body && req.body.size ? req.body.size : process.env.PAGE_SIZE,
           }
         );
         reply.code(200).send(body);
