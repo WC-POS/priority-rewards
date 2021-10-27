@@ -61,6 +61,11 @@ const CustomerModal = (props) => {
   const toast = useToast();
   const uploadInput = useRef(null);
 
+  const close = () => {
+    props.onClose();
+    setCustomer(customerTemplate);
+  };
+
   const onSave = async () => {
     if (!emailRegex.test(customer.email)) {
       toast({
@@ -133,7 +138,7 @@ const CustomerModal = (props) => {
   return (
     <Modal
       isOpen={props.isOpen}
-      onClose={props.onClose}
+      onClose={close}
       size="lg"
       scrollBehavior="inside"
       initialFocusRef={lastNameInput}
@@ -247,7 +252,7 @@ const CustomerModal = (props) => {
 
           <ModalFooter p={0} mt={4}>
             <Stack direction="row" spacing={4} w="full">
-              <IconButton icon={<UilTimes />} />
+              <IconButton icon={<UilTimes />} onClick={close} />
               <Button
                 leftIcon={<UilSave />}
                 w="full"
