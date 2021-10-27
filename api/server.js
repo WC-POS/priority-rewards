@@ -49,9 +49,9 @@ const start = async () => {
       },
     });
     app.register(require("./plugins/nodemailer-driver"));
-    app.register(require("./plugins/franchise-scope"));
+    // app.register(require("./plugins/franchise-scope"));
     app.register(require("./plugins/s3-driver"));
-    app.register(require("./plugins/admin-authentication"));
+    app.register(require("./plugins/guards"));
     app.register(require("./plugins/paginate"));
     app.register(require("./plugins/schema-loader"));
     app.register(require("./plugins/route-loader"));
