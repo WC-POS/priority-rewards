@@ -1,5 +1,8 @@
 const fs = require("fs");
+const bcrypt = require("bcrypt");
+const short = require("short-uuid");
 const { Types } = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
 module.exports = async function (fastify, options) {
   fastify.get(
@@ -174,6 +177,14 @@ module.exports = async function (fastify, options) {
         repsonse: {
           200: {
             $ref: "models-locations#",
+            properties: {
+              pos: {
+                _id: { type: "string" },
+                provider: { type: "string", enum: ["FPOS", ""] },
+                private: { type: "string" },
+                public: { type: "string" },
+              },
+            },
           },
         },
       },
@@ -183,8 +194,20 @@ module.exports = async function (fastify, options) {
         const location = await fastify.db.location.findById(
           Types.ObjectId(req.params.id)
         );
+        const apiKey = await fastify.db.posAPIKey.findOne({
+          location: location._id,
+          isDeleted: false,
+        });
         if (location) {
-          reply.code(200).send(location.toJSON());
+          reply.code(200).send({
+            ...location.toJSON(),
+            pos: apiKey
+              ? {
+                  ...apiKey.toJSON(),
+                  private: "superPrivateSuperDuperHiddenKey",
+                }
+              : { _id: null, provider: "", private: "", public: "" },
+          });
         } else {
           reply.code(404).send({ error: "Location not found." });
         }
@@ -219,6 +242,54 @@ module.exports = async function (fastify, options) {
       } catch (err) {
         console.log(err);
         reply.code(400).send({ error: err });
+      }
+    }
+  );
+  fastify.post(
+    "/location/:id/generate/apiKey/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        body: {
+          type: "object",
+          properties: {
+            provider: { $ref: "models-pos-api-key#/properties/provider" },
+          },
+        },
+        response: {
+          200: {
+            $ref: "models-pos-api-key#",
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      if (req.body.provider) {
+        const location = await fastify.db.location.findById(req.params.id);
+        if (location) {
+          await fastify.db.posAPIKey.updateMany(
+            { franchise: req.scope.franchise._id, location: location._id },
+            { $set: { isDeleted: true } }
+          );
+          const public = short().fromUUID(uuidv4());
+          const private = short().fromUUID(uuidv4());
+          const privateHash = await bcrypt.hash(
+            private,
+            Number(process.env.SALT_ROUNDS)
+          );
+          const apiKey = await fastify.db.posAPIKey.create({
+            franchise: req.scope.franchise._id,
+            location: location._id,
+            provider: req.body.provider,
+            public,
+            private: privateHash,
+          });
+          reply.code(200).send({ ...apiKey.toJSON(), private });
+        } else {
+          reply.code(404).send({ error: "Location could not be found." });
+        }
+      } else {
+        reply.code(400).send({ error: "Provider is required." });
       }
     }
   );

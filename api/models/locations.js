@@ -30,11 +30,6 @@ module.exports = {
       contactPhone: { type: Boolean, default: true },
     },
     note: { type: String, nullable: true, default: "" },
-    pos: {
-      provider: { type: String, enum: ["FPOS", ""], default: "" },
-      public: { type: String, default: "" },
-      private: { type: String, default: "" },
-    },
     services: {
       promotions: { type: Boolean, default: false },
       events: { type: Boolean, default: false },
