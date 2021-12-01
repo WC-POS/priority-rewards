@@ -2,6 +2,12 @@ import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -21,21 +27,144 @@ import {
   Switch,
   Text,
   Textarea,
+  useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 import {
   UilAngleRightB,
   UilBolt,
+  UilClipboardNotes,
   UilImage,
+  UilInfoCircle,
   UilUpload,
 } from "@iconscout/react-unicons";
 import { useAPIStore, useFranchiseStore } from "../../../../store";
 
+const APIKeyAlert = (props) => {
+  const focusRef = useRef();
+  const toast = useToast();
+
+  const copyToClipboard = async (key) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      toast({
+        title: "Key Copied",
+        description: "Your API Key has been copied to the clipboard.",
+        status: "success",
+        duration: 7000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.log(err);
+      toast({
+        title: "Key Could Not Be Copied",
+        description:
+          "Your API Key could not be copied to the clipboard at this moment.",
+        status: "error",
+        duration: 7000,
+        isClosable: true,
+      });
+    }
+  };
+
+  return (
+    <AlertDialog
+      isOpen={props.isOpen}
+      leastDestructiveRef={focusRef}
+      onClose={props.onClose}
+    >
+      <AlertDialogOverlay>
+        <AlertDialogContent>
+          <AlertDialogHeader fontSize="2xl" fontWeight="bold">
+            API Keys
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Stack spacing={4}>
+              <Stack
+                direction="row"
+                spacing={4}
+                p={4}
+                rounded="md"
+                bg="gray.100"
+                alignItems="center"
+              >
+                <Stack color="gray.600" flexShrink={0}>
+                  <UilInfoCircle />
+                </Stack>
+                <Text>
+                  All other API Keys for this location have been deactivated.
+                </Text>
+              </Stack>
+              <Stack>
+                <Heading fontWeight="semibold" size="md">
+                  Public
+                </Heading>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Text>{props.keys.public}</Text>
+                  <IconButton
+                    icon={<UilClipboardNotes />}
+                    colorScheme="teal"
+                    onClick={() => copyToClipboard(props.keys.public)}
+                  />
+                </Stack>
+              </Stack>
+              <Stack>
+                <Heading fontWeight="semibold" size="md">
+                  Private
+                </Heading>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Text>{props.keys.private}</Text>
+                  <IconButton
+                    icon={<UilClipboardNotes />}
+                    colorScheme="teal"
+                    onClick={() => copyToClipboard(props.keys.private)}
+                  />
+                </Stack>
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={4}
+                p={4}
+                rounded="md"
+                bg="teal.100"
+                alignItems="center"
+              >
+                <Stack color="teal.600" flexShrink={0}>
+                  <UilInfoCircle />
+                </Stack>
+                <Text>
+                  Once this modal is dismissed, you will NOT be able to retreive
+                  the private key. Please store these keys in a safe place.
+                </Text>
+              </Stack>
+            </Stack>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button ref={focusRef} onClick={props.onClose}>
+              Dismiss
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogOverlay>
+    </AlertDialog>
+  );
+};
+
 const LocationEdit = (props) => {
+  const [generateStatus, setGenerateStatus] = useState("loaded");
   const fetchGet = useAPIStore((state) => state.fetchGet);
   const fetchPost = useAPIStore((state) => state.fetchPost);
   const fetchUpload = useAPIStore((state) => state.fetchUpload);
   const franchise = useFranchiseStore((state) => state.franchise);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [location, setLocation] = useState({});
   const previewImageFile = useRef();
   const [stateOptions, setStateOptions] = useState([]);
@@ -57,6 +186,38 @@ const LocationEdit = (props) => {
       console.log(stateRes.error);
     }
   }, []);
+
+  const generateAPIKey = async () => {
+    setGenerateStatus("loading");
+    if (location.pos.provider) {
+      const res = await fetchPost(
+        `/admin/franchise/location/${location._id}/generate/apiKey/`,
+        { provider: location.pos.provider }
+      );
+      if (res.ok) {
+        setLocation({ ...location, pos: res.body });
+        onOpen();
+      } else {
+        toast({
+          title: "API Key Generation Error",
+          description: "There was an error generating your API Key.",
+          status: "warning",
+          duration: 7000,
+          isClosable: true,
+        });
+        console.log(res.error);
+      }
+    } else {
+      toast({
+        title: "Missing Provider",
+        description: "Please select a POS provider for your API Key.",
+        status: "warning",
+        duration: 7000,
+        isClosable: true,
+      });
+    }
+    setGenerateStatus("loaded");
+  };
 
   const uploadFiles = async (e) => {
     if (e.target.files.length) {
@@ -123,6 +284,15 @@ const LocationEdit = (props) => {
 
   return (
     <>
+      <APIKeyAlert
+        onClose={onClose}
+        isOpen={isOpen}
+        keys={
+          location.pos
+            ? { public: location.pos.public, private: location.pos.private }
+            : { public: "", private: "" }
+        }
+      />
       <Stack
         direction={{ base: "column", md: "row" }}
         w="full"
@@ -599,6 +769,8 @@ const LocationEdit = (props) => {
                   icon={<UilBolt />}
                   colorScheme="teal"
                   isDisabled={!location.pos.provider}
+                  onClick={generateAPIKey}
+                  isLoading={generateStatus === "loading"}
                 />
               </Stack>
               <Stack mt={2}>
@@ -621,35 +793,17 @@ const LocationEdit = (props) => {
                     <option value="FPOS">FuturePOS</option>
                   </Select>
                 </FormControl>
-                <FormControl>
+                <FormControl isDisabled>
                   <FormLabel>Public Key</FormLabel>
                   <Input
-                    onChange={(e) =>
-                      setLocation({
-                        ...location,
-                        pos: {
-                          ...location.pos,
-                          public: e.target.value,
-                        },
-                      })
-                    }
                     value={status === "loaded" ? location.pos.public : ""}
                     bg="white"
                   />
                 </FormControl>
-                <FormControl>
+                <FormControl isDisabled>
                   <FormLabel>Private Key</FormLabel>
                   <Input
                     type="password"
-                    onChange={(e) =>
-                      setLocation({
-                        ...location,
-                        pos: {
-                          ...location.pos,
-                          private: e.target.value,
-                        },
-                      })
-                    }
                     value={status === "loaded" ? location.pos.private : ""}
                     bg="white"
                   />
