@@ -1,19 +1,29 @@
 {
   "name": "priority-rewards-api",
   "version": "0.1.0",
-  "main": "server.js",
+  "main": "dist/server.js",
   "author": "Devin Sharpe",
   "license": "UNLICENSED",
   "private": false,
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "concurrently -n \"FAST,TSC \" -c \"gray,blue\" \"nodemon dist/server.js\" \"tsc -w --preserveWatchOutput \" --default-input-target=0 -i"
   },
   "devDependencies": {
+    "@aws-sdk/types": "^3.40.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^16.11.7",
+    "@types/nodemailer": "^6.4.4",
+    "@types/pino": "^7.0.5",
+    "concurrently": "^6.4.0",
+    "fastify-log": "^1.2.1",
     "fastify-swagger": "^4.12.0",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.37.0",
+    "@types/uuid": "^8.3.3",
     "bcrypt": "^5.0.1",
     "date-fns": "^2.24.0",
     "dotenv": "^10.0.0",
@@ -25,6 +35,7 @@
     "fastify-multer": "^2.0.2",
     "mongoose": "^6.0.7",
     "nodemailer": "^6.7.0",
+    "pino-colada": "^2.2.0",
     "short-uuid": "^4.2.0",
     "uuid": "^8.3.2"
   }
