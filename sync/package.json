@@ -17,7 +17,7 @@
   },
   "productName": "priority-rewards-sync",
   "scripts": {
-    "dev": "concurrently \"yarn dev:vite\" \" yarn dev:electron\"",
+    "dev": "concurrently -n \"VITE,ELEC\" -c \"magenta,cyan\" \"yarn dev:vite\" \" yarn dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "npm run build:electron && electron .",
     "build": "npm run build:vite && npm run build:electron",
@@ -38,6 +38,7 @@
     "@vitejs/plugin-react-refresh": "^1.3.6",
     "crypto-js": "^4.1.1",
     "date-fns": "^2.25.0",
+    "dotenv": "^10.0.0",
     "electron": "^15.3.0",
     "electron-is-dev": "^2.0.0",
     "framer-motion": "^4",
@@ -46,6 +47,9 @@
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.3.0",
     "sequelize": "^6.8.0",
+    "sequelize-auto": "^0.8.5",
+    "sqlite3": "^5.0.2",
+    "tedious": "^14.0.0",
     "vite": "^2.6.2",
     "zustand": "^3.6.0"
   },

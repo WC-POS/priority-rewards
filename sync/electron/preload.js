@@ -1,6 +1,5 @@
+import dotenv from 'dotenv';
 import { ipcRenderer, contextBridge } from 'electron';
-import fs from 'fs';
-import path from 'path';
 
 export const api = {
   getConfig: async () => {
@@ -11,8 +10,24 @@ export const api = {
   },
   on: (channel, callback) => {
     ipcRenderer.on(channel, (_, data) => callback(data));
+  },
+  once: (channel, callback) => {
+    ipcRenderer.once(channel, (_, data) => callback(data));
   }
 };
 
+const env = Object.keys(process.env).reduce(
+  (acc, key) => {
+    if (key.includes('ELECTRON_PUBLIC')) {
+      acc[key] = process.env[key];
+    }
+    return acc;
+  },
+  {
+    DEFAULT_API_HOST: 'api.priorityrewards.com'
+  }
+);
+
 contextBridge.exposeInMainWorld('Main', api);
 contextBridge.exposeInMainWorld('ipcRenderer', ipcRenderer);
+contextBridge.exposeInMainWorld('env', env);

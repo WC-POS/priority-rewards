@@ -1,12 +1,17 @@
 // Native
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 // Packages
+import dotenv from 'dotenv';
 import { BrowserWindow, app, ipcMain, IpcMainEvent } from 'electron';
 import isDev from 'electron-is-dev';
 
 const height = 600;
 const width = 800;
+
+dotenv.config({
+  path: resolve(__dirname, '..', '..', '.env')
+});
 
 function createWindow() {
   // Create the browser window.
@@ -55,7 +60,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-import MainMethods from './fpos';
-Object.keys(MainMethods).forEach((methodName) => {
-  ipcMain.on(methodName, MainMethods[methodName]);
+import localDB from './local-db';
+localDB.runMaintenance();
+
+import methods from './fpos';
+Object.keys(methods).forEach((methodName) => {
+  if (typeof methods[methodName] === 'function') {
+    ipcMain.on(methodName, methods[methodName]);
+  }
 });
