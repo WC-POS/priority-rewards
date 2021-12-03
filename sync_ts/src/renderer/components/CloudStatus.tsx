@@ -27,6 +27,7 @@ import {
   UilShoppingBag,
   UilTicket,
 } from '@iconscout/react-unicons';
+import { useAPIStore, useFranchiseStore } from 'renderer/store';
 
 import { useEnvMode } from 'renderer/hooks';
 
@@ -35,76 +36,66 @@ const CloudStatus: React.FC = () => {
   const initRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const [keys, setKeys] = useState({
-    publicKey: '',
-    privateKey: '',
-  });
-  const [cloudData, setCloudData] = useState<{
-    location?: Location;
-    franchise?: Franchise;
-  }>({});
+  const { publicKey, privateKey, setKeys } = useAPIStore((state) => state);
+  const { franchise, location, setFranchise, setLocation, reset } =
+    useFranchiseStore((state) => ({
+      franchise: state.franchise,
+      location: state.location,
+      setFranchise: state.setFranchise,
+      setLocation: state.setLocation,
+      reset: state.reset,
+    }));
   const [status, setStatus] = useState(false);
   const { url } = useEnvMode();
 
-  const getCloudData = useCallback(
-    async (publicKey: string, privateKey: string) => {
-      try {
-        const res = await fetch(`${url}/sync/fpos/`, {
-          method: 'GET',
-          headers: {
-            'sync-public': publicKey,
-            'sync-private': privateKey,
-          },
-        });
-        if (res.ok) {
-          const data = (await res.json()) as {
-            host: string;
-            slug: string;
-            isAdmin: boolean;
-            isApi: boolean;
-            franchise: Franchise;
-            location: Location;
-          };
-          setCloudData({
-            location: data.location,
-            franchise: data.franchise,
-          });
-          setStatus(true);
-        } else {
-          setCloudData({});
-          setStatus(false);
-        }
-      } catch (err) {
-        setCloudData({});
+  const getCloudData = useCallback(async () => {
+    try {
+      const res = await fetch(`${url}/sync/fpos/`, {
+        method: 'GET',
+        headers: {
+          'sync-public': publicKey,
+          'sync-private': privateKey,
+        },
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          host: string;
+          slug: string;
+          isAdmin: boolean;
+          isApi: boolean;
+          franchise: Franchise;
+          location: Location;
+        };
+        setFranchise(data.franchise);
+        setLocation(data.location);
+        setStatus(true);
+      } else {
+        reset();
         setStatus(false);
       }
-    },
-    [url]
-  );
+    } catch (err) {
+      reset();
+      setStatus(false);
+    }
+  }, [url, privateKey, publicKey, reset, setFranchise, setLocation]);
 
   useEffect(() => {
     window.electron.ipcRenderer
       .getConfig()
       .then(async (newConfig) => {
-        setKeys({
-          publicKey: newConfig.API.publicKey,
-          privateKey: newConfig.API.privateKey,
-        });
-        await getCloudData(newConfig.API.publicKey, newConfig.API.privateKey);
+        setKeys(newConfig.API.publicKey, newConfig.API.privateKey);
+        await getCloudData();
         setIsLoading(false);
         return null;
       })
       .catch((err) => err);
     window.electron.ipcRenderer.clearConfigSave();
     window.electron.ipcRenderer.onConfigSave((newConfig) => {
-      setKeys({
-        publicKey: newConfig.API.publicKey,
-        privateKey: newConfig.API.privateKey,
-      });
-      getCloudData(newConfig.API.publicKey, newConfig.API.privateKey);
+      setKeys(newConfig.API.publicKey, newConfig.API.privateKey);
+      getCloudData();
       setIsLoading(false);
     });
-  }, [url, getCloudData]);
+  }, [url, getCloudData, setKeys]);
 
   return (
     <Popover
@@ -123,13 +114,13 @@ const CloudStatus: React.FC = () => {
           {status ? <UilCloudCheck /> : <UilCloudSlash />}
         </Button>
       </PopoverTrigger>
-      {status && cloudData.franchise && cloudData.location ? (
+      {status && franchise && location ? (
         <PopoverContent borderColor="green.400">
           <PopoverHeader bgColor="green.400" color="white">
             <Stack direction="row" spacing={2}>
               <UilCloudCheck />
               <Text>
-                {`${cloudData.franchise.displayTitle.superTitle} ${cloudData.franchise.displayTitle.title} ${cloudData.franchise.displayTitle.subtitle}`.trim()}
+                {`${franchise.displayTitle.superTitle} ${franchise.displayTitle.title} ${franchise.displayTitle.subtitle}`.trim()}
               </Text>
             </Stack>
           </PopoverHeader>
@@ -146,16 +137,16 @@ const CloudStatus: React.FC = () => {
                 p={1}
               >
                 <Image
-                  src={cloudData.franchise.logo.location}
-                  alt={cloudData.franchise.logo.alternativeText}
+                  src={franchise.logo.location}
+                  alt={franchise.logo.alternativeText}
                   w="full"
                 />
               </Stack>
 
               <Stack>
-                <Heading size="md">{cloudData.location.name}</Heading>
+                <Heading size="md">{location.name}</Heading>
                 <Stack direction="row" spacing={2}>
-                  {cloudData.location.services.promotions && (
+                  {location.services.promotions && (
                     <Box
                       bg="gray.500"
                       rounded="md"
@@ -166,12 +157,12 @@ const CloudStatus: React.FC = () => {
                       <UilAward />
                     </Box>
                   )}
-                  {cloudData.location.services.events && (
+                  {location.services.events && (
                     <Box bg="gray.500" rounded="md" p={1} color="white">
                       <UilTicket />
                     </Box>
                   )}
-                  {cloudData.location.services.olo && (
+                  {location.services.olo && (
                     <Box bg="gray.500" rounded="md" p={1} color="white">
                       <UilShoppingBag />
                     </Box>
@@ -182,27 +173,22 @@ const CloudStatus: React.FC = () => {
             <Stack p={2} spacing={0} bgColor={altBg} rounded="md" mt={2}>
               <Heading size="xs">Location Address</Heading>
               <Text>
-                {cloudData.location.address.street1}{' '}
-                {cloudData.location.address.street2 && (
-                  <>{cloudData.location.address.street2}</>
-                )}
+                {location.address.street1}{' '}
+                {location.address.street2 && <>{location.address.street2}</>}
               </Text>
-              <Text>{`${cloudData.location.address.city}, ${cloudData.location.address.state}`}</Text>
+              <Text>{`${location.address.city}, ${location.address.state}`}</Text>
             </Stack>
             <Stack direction="row" justifyContent="space-between" mt={2}>
               <Stack direction="row" spacing={2} alignItems="center">
-                <Switch isDisabled isChecked={cloudData.location.isActive} />
-                {cloudData.location.isActive ? (
+                <Switch isDisabled isChecked={location.isActive} />
+                {location.isActive ? (
                   <Text>Active</Text>
                 ) : (
                   <Text>Inactive</Text>
                 )}
               </Stack>
               <Link
-                href={`${url.replace(
-                  'api',
-                  `${cloudData.franchise.slug}.admin`
-                )}`}
+                href={`${url.replace('api', `${franchise.slug}.admin`)}`}
                 isExternal
                 alignItems="center"
                 display="flex"
@@ -247,7 +233,7 @@ const CloudStatus: React.FC = () => {
               <Button
                 size="sm"
                 colorScheme="blue"
-                onClick={() => getCloudData(keys.publicKey, keys.privateKey)}
+                onClick={() => getCloudData()}
               >
                 Reconnect
               </Button>

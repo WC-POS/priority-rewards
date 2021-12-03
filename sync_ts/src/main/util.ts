@@ -2,6 +2,7 @@ import { createConnection, getConnection } from 'typeorm';
 
 import { BrowserWindow } from 'electron';
 import CryptoJS from 'crypto-js';
+import { Item } from './models/FPOS/Item';
 import { SettingsConfig } from 'types';
 import { URL } from 'url';
 import fs from 'fs';
@@ -202,4 +203,25 @@ export const connect = async (config: SettingsConfig) => {
     );
   }
   return getStatus();
+};
+
+export const getItems = async () => {
+  try {
+    const connection = getConnection();
+    if (connection) {
+      const itemRepo = connection.getRepository(Item);
+      return await itemRepo.find();
+    }
+    return [];
+  } catch (err) {
+    log(err);
+    sendError(
+      buildError(
+        'Error querying for items',
+        'If this problem persists, please reach out to PR support.',
+        err as Error
+      )
+    );
+    return [];
+  }
 };

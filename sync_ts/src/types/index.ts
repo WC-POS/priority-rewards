@@ -1,4 +1,5 @@
 import { ErrorMsg } from 'main/util';
+import { Item } from 'main/models/FPOS/Item';
 
 export enum PaymentProvider {
   Authorize = 'AUTHORIZE.NET',
@@ -150,6 +151,7 @@ declare global {
         clearConnect: () => void;
         clearError: () => void;
         getConfig: () => Promise<SettingsConfig>;
+        getItems: () => Promise<Item[]>;
         setConfig: (config: SettingsConfig) => Promise<SettingsConfig>;
         onConnect: (callback: (status: boolean) => void) => void;
         onError: (callback: (error: ErrorMsg) => void) => void;

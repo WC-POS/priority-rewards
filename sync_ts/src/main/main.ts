@@ -18,6 +18,7 @@ import {
   decryptConfig,
   disconnect,
   getConfig,
+  getItems,
   getStatus,
   resolveHtmlPath,
   writeConfig,
@@ -48,6 +49,10 @@ let mainWindow: BrowserWindow | null = null;
 ipcMain.handle('get-config', async () => {
   const config = await getConfig();
   return config;
+});
+
+ipcMain.handle('get-items', async () => {
+  return getItems();
 });
 
 ipcMain.handle('get-status', () => getStatus());

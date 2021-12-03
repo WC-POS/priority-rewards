@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('electron', {
     getConfig() {
       return ipcRenderer.invoke('get-config');
     },
+    getItems() {
+      return ipcRenderer.invoke('get-items');
+    },
     setConfig(config) {
       return ipcRenderer.invoke('set-config', config);
     },
