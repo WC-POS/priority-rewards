@@ -1,5 +1,5 @@
 import { Franchise, Location } from 'types';
-import { SetState, State, UseBoundStore } from 'zustand';
+import { SetState, State } from 'zustand';
 
 export interface FranchiseState extends State {
   franchise: Franchise | null;
