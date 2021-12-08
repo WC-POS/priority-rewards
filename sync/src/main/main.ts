@@ -18,6 +18,8 @@ import {
   decryptConfig,
   disconnect,
   getConfig,
+  getDepartments,
+  getItem,
   getItems,
   getStatus,
   resolveHtmlPath,
@@ -51,8 +53,16 @@ ipcMain.handle('get-config', async () => {
   return config;
 });
 
+ipcMain.handle('get-item', async (_, id: string) => {
+  return getItem(id);
+});
+
 ipcMain.handle('get-items', async () => {
   return getItems();
+});
+
+ipcMain.handle('get-departments', async () => {
+  return getDepartments();
 });
 
 ipcMain.handle('get-status', () => getStatus());

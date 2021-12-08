@@ -1,3 +1,4 @@
+import { Department } from 'main/models/FPOS/Department';
 import { ErrorMsg } from 'main/util';
 import { Item } from 'main/models/FPOS/Item';
 
@@ -143,6 +144,14 @@ export interface IpcEventListener<T = void, U = void, V = void, W = void> {
   (channel: IpcChannels, callback: IpcCallbackFn<T, U, V, W>): void;
 }
 
+export interface StatusInfo {
+  connected: boolean;
+  db: {
+    host: string;
+    name: string;
+  };
+}
+
 declare global {
   interface Window {
     electron: {
@@ -151,9 +160,11 @@ declare global {
         clearConnect: () => void;
         clearError: () => void;
         getConfig: () => Promise<SettingsConfig>;
+        getDepartments: () => Promise<Department[]>;
+        getItem: (id: string) => Promise<Item | undefined>;
         getItems: () => Promise<Item[]>;
         setConfig: (config: SettingsConfig) => Promise<SettingsConfig>;
-        onConnect: (callback: (status: boolean) => void) => void;
+        onConnect: (callback: (info: StatusInfo) => void) => void;
         onError: (callback: (error: ErrorMsg) => void) => void;
         onConfigSave: (callback: (config: SettingsConfig) => void) => void;
       };

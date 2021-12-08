@@ -1,9 +1,16 @@
-import { createConnection, getConnection } from 'typeorm';
+import {
+  BaseEntity,
+  EntityTarget,
+  FindManyOptions,
+  createConnection,
+  getConnection,
+} from 'typeorm';
+import { SettingsConfig, StatusInfo } from 'types';
 
 import { BrowserWindow } from 'electron';
 import CryptoJS from 'crypto-js';
+import { Department } from './models/FPOS/Department';
 import { Item } from './models/FPOS/Item';
-import { SettingsConfig } from 'types';
 import { URL } from 'url';
 import fs from 'fs';
 import getMAC from 'getmac';
@@ -34,7 +41,7 @@ export function buildError(
   };
 }
 
-export function sendConnect(status: boolean) {
+export function sendConnect(status: StatusInfo) {
   const window = BrowserWindow.getFocusedWindow();
   if (window) {
     window.webContents.send('connect', status);
@@ -154,10 +161,14 @@ export const getConfig = async () => {
   }
 };
 
-export const getStatus = () => {
-  const status = getConnection().isConnected;
-  sendConnect(status);
-  return status;
+export const getStatus = async () => {
+  const config = await getConfig();
+  const info: StatusInfo = {
+    connected: getConnection().isConnected,
+    db: { host: config.FPOS.host, name: config.FPOS.database },
+  };
+  sendConnect(info);
+  return info;
 };
 
 export const disconnect = async () => {
@@ -165,7 +176,7 @@ export const disconnect = async () => {
     const connection = getConnection();
     if (connection.isConnected) {
       await getConnection().close();
-      sendConnect(false);
+      sendConnect({ connected: false, db: { host: '', name: '' } });
     }
   } catch (err) {
     log(err);
@@ -187,6 +198,7 @@ export const connect = async (config: SettingsConfig) => {
       database: decryptedConfig.FPOS.database,
       entities: [entityDirRule],
       synchronize: false,
+      port: 1433,
       extra: {
         encrypt: false,
         instanceName: decryptedConfig.FPOS.host.split('\\')[1],
@@ -205,12 +217,46 @@ export const connect = async (config: SettingsConfig) => {
   return getStatus();
 };
 
+export const getItem: (id: string) => Promise<Item | undefined> = async (
+  id
+) => {
+  try {
+    const connection = getConnection();
+    if (connection) {
+      const itemRepo = connection.getRepository(Item);
+      const item = await itemRepo.findOne(id, { relations: ['itemModifiers'] });
+      if (item && item.modifierCount) {
+        const modifiers = item.itemModifiers;
+        console.log(modifiers);
+        return item;
+      }
+      if (item) {
+        return item;
+      }
+      return undefined;
+    }
+    return undefined;
+  } catch (err) {
+    log(err);
+    sendError(
+      buildError(
+        'Error querying for item',
+        `Could not find item ${id}, if this problem persists, please reach out to PR support.`,
+        err as Error
+      )
+    );
+    return undefined;
+  }
+};
+
 export const getItems = async () => {
   try {
     const connection = getConnection();
     if (connection) {
       const itemRepo = connection.getRepository(Item);
-      return await itemRepo.find();
+      return await itemRepo.find({
+        order: { department: 'ASC', itemName: 'ASC' },
+      });
     }
     return [];
   } catch (err) {
@@ -218,6 +264,29 @@ export const getItems = async () => {
     sendError(
       buildError(
         'Error querying for items',
+        'If this problem persists, please reach out to PR support.',
+        err as Error
+      )
+    );
+    return [];
+  }
+};
+
+export const getDepartments = async () => {
+  try {
+    const connection = getConnection();
+    if (connection) {
+      const departmentRepo = connection.getRepository(Department);
+      return await departmentRepo.find({
+        order: { departmentDescription: 'ASC' },
+      });
+    }
+    return [];
+  } catch (err) {
+    log(err);
+    sendError(
+      buildError(
+        'Error querying for departments',
         'If this problem persists, please reach out to PR support.',
         err as Error
       )
