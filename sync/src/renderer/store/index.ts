@@ -1,4 +1,5 @@
 import APIStore, { APIState } from './api';
+import FPOSStore, { FPOSState } from './fpos';
 import FranchiseStore, { FranchiseState } from './franchise';
 import create, { GetState, SetState } from 'zustand';
 
@@ -10,6 +11,12 @@ export const useAPIStore = create<
   GetState<APIState>,
   StoreApiWithSubscribeWithSelector<APIState>
 >(APIStore);
+export const useFPOSStore = create<
+  FPOSState,
+  SetState<FPOSState>,
+  GetState<FPOSState>,
+  StoreApiWithSubscribeWithSelector<FPOSState>
+>(FPOSStore);
 export const useFranchiseStore = create<
   FranchiseState,
   SetState<FranchiseState>,
