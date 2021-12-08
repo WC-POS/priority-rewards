@@ -11,6 +11,7 @@ import {
   PopoverFooter,
   PopoverHeader,
   PopoverTrigger,
+  Portal,
   Stack,
   Switch,
   Text,
@@ -115,131 +116,141 @@ const CloudStatus: React.FC = () => {
         </Button>
       </PopoverTrigger>
       {status && franchise && location ? (
-        <PopoverContent borderColor="green.400">
-          <PopoverHeader bgColor="green.400" color="white">
-            <Stack direction="row" spacing={2}>
-              <UilCloudCheck />
-              <Text>
-                {`${franchise.displayTitle.superTitle} ${franchise.displayTitle.title} ${franchise.displayTitle.subtitle}`.trim()}
-              </Text>
-            </Stack>
-          </PopoverHeader>
-          <PopoverCloseButton color="white" />
-          <PopoverBody>
-            <Stack direction="row" spacing={4} alignItems="center">
-              <Stack
-                rounded="md"
-                w={20}
-                h={20}
-                alignItems="center"
-                justifyContent="center"
-                bgColor={altBg}
-                p={1}
-              >
-                <Image
-                  src={franchise.logo.location}
-                  alt={franchise.logo.alternativeText}
-                  w="full"
-                />
-              </Stack>
-
-              <Stack>
-                <Heading size="md">{location.name}</Heading>
+        <Portal>
+          <Box zIndex={20}>
+            <PopoverContent borderColor="green.400">
+              <PopoverHeader bgColor="green.400" color="white">
                 <Stack direction="row" spacing={2}>
-                  {location.services.promotions && (
-                    <Box
-                      bg="gray.500"
-                      rounded="md"
-                      p={1}
-                      color="white"
-                      w="auto"
-                    >
-                      <UilAward />
-                    </Box>
-                  )}
-                  {location.services.events && (
-                    <Box bg="gray.500" rounded="md" p={1} color="white">
-                      <UilTicket />
-                    </Box>
-                  )}
-                  {location.services.olo && (
-                    <Box bg="gray.500" rounded="md" p={1} color="white">
-                      <UilShoppingBag />
-                    </Box>
-                  )}
+                  <UilCloudCheck />
+                  <Text>
+                    {`${franchise.displayTitle.superTitle} ${franchise.displayTitle.title} ${franchise.displayTitle.subtitle}`.trim()}
+                  </Text>
                 </Stack>
-              </Stack>
-            </Stack>
-            <Stack p={2} spacing={0} bgColor={altBg} rounded="md" mt={2}>
-              <Heading size="xs">Location Address</Heading>
-              <Text>
-                {location.address.street1}{' '}
-                {location.address.street2 && <>{location.address.street2}</>}
-              </Text>
-              <Text>{`${location.address.city}, ${location.address.state}`}</Text>
-            </Stack>
-            <Stack direction="row" justifyContent="space-between" mt={2}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Switch isDisabled isChecked={location.isActive} />
-                {location.isActive ? (
-                  <Text>Active</Text>
-                ) : (
-                  <Text>Inactive</Text>
-                )}
-              </Stack>
-              <Link
-                href={`${url.replace('api', `${franchise.slug}.admin`)}`}
-                isExternal
-                alignItems="center"
-                display="flex"
-              >
-                <Text mr={2}> Admin Portal</Text>
-                <UilExternalLinkAlt size={20} />
-              </Link>
-            </Stack>
-          </PopoverBody>
-          <PopoverFooter>
-            <Button size="sm" ref={initRef} onClick={onClose}>
-              Close
-            </Button>
-          </PopoverFooter>
-        </PopoverContent>
+              </PopoverHeader>
+              <PopoverCloseButton color="white" />
+              <PopoverBody>
+                <Stack direction="row" spacing={4} alignItems="center">
+                  <Stack
+                    rounded="md"
+                    w={20}
+                    h={20}
+                    alignItems="center"
+                    justifyContent="center"
+                    bgColor={altBg}
+                    p={1}
+                  >
+                    <Image
+                      src={franchise.logo.location}
+                      alt={franchise.logo.alternativeText}
+                      w="full"
+                    />
+                  </Stack>
+
+                  <Stack>
+                    <Heading size="md">{location.name}</Heading>
+                    <Stack direction="row" spacing={2}>
+                      {location.services.promotions && (
+                        <Box
+                          bg="gray.500"
+                          rounded="md"
+                          p={1}
+                          color="white"
+                          w="auto"
+                        >
+                          <UilAward />
+                        </Box>
+                      )}
+                      {location.services.events && (
+                        <Box bg="gray.500" rounded="md" p={1} color="white">
+                          <UilTicket />
+                        </Box>
+                      )}
+                      {location.services.olo && (
+                        <Box bg="gray.500" rounded="md" p={1} color="white">
+                          <UilShoppingBag />
+                        </Box>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Stack>
+                <Stack p={2} spacing={0} bgColor={altBg} rounded="md" mt={2}>
+                  <Heading size="xs">Location Address</Heading>
+                  <Text>
+                    {location.address.street1}{' '}
+                    {location.address.street2 && (
+                      <>{location.address.street2}</>
+                    )}
+                  </Text>
+                  <Text>{`${location.address.city}, ${location.address.state}`}</Text>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" mt={2}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Switch isDisabled isChecked={location.isActive} />
+                    {location.isActive ? (
+                      <Text>Active</Text>
+                    ) : (
+                      <Text>Inactive</Text>
+                    )}
+                  </Stack>
+                  <Link
+                    href={`${url.replace('api', `${franchise.slug}.admin`)}`}
+                    isExternal
+                    alignItems="center"
+                    display="flex"
+                  >
+                    <Text mr={2}> Admin Portal</Text>
+                    <UilExternalLinkAlt size={20} />
+                  </Link>
+                </Stack>
+              </PopoverBody>
+              <PopoverFooter>
+                <Button size="sm" ref={initRef} onClick={onClose}>
+                  Close
+                </Button>
+              </PopoverFooter>
+            </PopoverContent>
+          </Box>
+        </Portal>
       ) : (
-        <PopoverContent overflow="hidden" borderColor="red.400">
-          <PopoverHeader bgColor="red.400" color="white">
-            <Stack direction="row" spacing={2}>
-              <UilCloudSlash />
-              <Text>Error Loading Cloud Data</Text>
-            </Stack>
-          </PopoverHeader>
-          <PopoverCloseButton color="white" />
-          <PopoverBody>
-            <Stack justifyContent="center">
-              <Text>
-                Cloud data could not be loaded. Please check your internet
-                connection and API keys.
-              </Text>
-            </Stack>
-          </PopoverBody>
-          <PopoverFooter>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <Button size="sm" ref={initRef} onClick={onClose}>
-                Close
-              </Button>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                onClick={() => getCloudData()}
-              >
-                Reconnect
-              </Button>
-            </Stack>
-          </PopoverFooter>
-        </PopoverContent>
+        <Portal>
+          <Box zIndex={20}>
+            <PopoverContent overflow="hidden" borderColor="red.400">
+              <PopoverHeader bgColor="red.400" color="white">
+                <Stack direction="row" spacing={2}>
+                  <UilCloudSlash />
+                  <Text>Error Loading Cloud Data</Text>
+                </Stack>
+              </PopoverHeader>
+              <PopoverCloseButton color="white" />
+              <PopoverBody>
+                <Stack justifyContent="center">
+                  <Text>
+                    Cloud data could not be loaded. Please check your internet
+                    connection and API keys.
+                  </Text>
+                </Stack>
+              </PopoverBody>
+              <PopoverFooter>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Button size="sm" ref={initRef} onClick={onClose}>
+                    Close
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={() => getCloudData()}
+                  >
+                    Reconnect
+                  </Button>
+                </Stack>
+              </PopoverFooter>
+            </PopoverContent>
+          </Box>
+        </Portal>
       )}
     </Popover>
   );
