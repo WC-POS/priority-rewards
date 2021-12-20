@@ -1,5 +1,5 @@
-import { Schema, Document, model, Model } from "mongoose";
-import { getUnixTimestamp, TimestampAttrs } from "../utils";
+import { Document, Model, Schema, model } from "mongoose";
+import { TimestampAttrs, getUnixTimestamp } from "../utils";
 
 export const AccountFSchema = {
   $id: "models-accounts",
