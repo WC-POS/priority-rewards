@@ -1,10 +1,16 @@
-import bcrypt from "bcrypt";
-import { add, getUnixTime } from "date-fns";
+import {
+  AdminAccountAttrs,
+  AdminAccountDocument,
+} from "../../models/admin-accounts";
+import { AdminSessionJWT, RouteWithBody, RouteWithQuery } from "../../utils";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { PaginateOptions, paginate } from "../../utils/paginate";
+import { add, getUnixTime } from "date-fns";
+
 import { FastifyPluginOptions } from "fastify";
 import { RouteGenericInterface } from "fastify/types/route";
+import bcrypt from "bcrypt";
 import short from "short-uuid";
-import { AdminSessionJWT } from "../../utils";
 
 export default async function (
   fastify: FastifyInstance,
@@ -85,6 +91,117 @@ export default async function (
             expiresAt: session.expiresAt,
           },
         });
+      }
+    }
+  );
+
+  fastify.get<RouteWithBody<PaginateOptions>>(
+    "/accounts/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        body: {
+          $ref: "list-page-body#",
+        },
+        response: {
+          200: {
+            $ref: "list-page-response#",
+            properties: {
+              results: {
+                type: "array",
+                items: {
+                  ref: "Models-AdminAccount",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      try {
+        reply.code(200).send(
+          await paginate<AdminAccountDocument>(
+            fastify.db.models.AdminAccount.find(
+              {
+                franchise: req.scope.franchise!._id,
+              },
+              { password: 0 }
+            ).sort({ lastName: 1, firstName: 1, email: 1 }),
+            req.body || {}
+          )
+        );
+      } catch (err) {
+        reply.code(500).send({ error: err });
+      }
+    }
+  );
+
+  fastify.post<RouteWithBody<AdminAccountAttrs>>(
+    "/accounts/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        body: {
+          $ref: "Models-AdminAccount#",
+        },
+        response: {
+          201: {
+            $ref: "Models-AdminAccount#",
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      try {
+        let registerCode;
+        let password = req.body.password;
+        if (password) {
+          password = await bcrypt.hash(
+            password,
+            parseInt(process.env.SALT_ROUNDS)
+          );
+        } else {
+          const translator = short(short.constants.flickrBase58, {
+            consistentLength: false,
+          });
+          password = await bcrypt.hash(
+            translator.new(),
+            parseInt(process.env.SALT_ROUNDS)
+          );
+          registerCode = short.generate().slice(0, 8);
+        }
+        const account = await fastify.db.models.AdminAccount.create({
+          ...req.body,
+          password,
+          franchise: req.scope.franchise!._id,
+        });
+        if (registerCode) {
+          const adminAccountRegistrationCode =
+            await fastify.db.models.AdminAccountRegistrationCode.create({
+              account: account._id,
+              franchise: account.franchise,
+              code: await bcrypt.hash(
+                registerCode,
+                parseInt(process.env.TEMP_AUTH_SALT)
+              ),
+              expiresAt: getUnixTime(add(new Date(), { days: 2 })),
+            });
+          let messageInfo = await fastify.mail.utils.sendNewAdminAccountEmail(
+            adminAccountRegistrationCode,
+            registerCode,
+            { days: 2 }
+          );
+          if (messageInfo) {
+            adminAccountRegistrationCode.messageId = messageInfo.messageId;
+            adminAccountRegistrationCode.save();
+          }
+          reply.code(200).send({ ...account.toJSON(), password: undefined });
+        } else {
+          reply.code(200).send({ ...account.toJSON(), password: undefined });
+        }
+      } catch (err) {
+        reply.code(400).send({ error: err });
       }
     }
   );
@@ -309,6 +426,256 @@ export default async function (
       }
       console.log(adminAuthTempCode);
       reply.code(200).send();
+    }
+  );
+
+  fastify.post<RouteWithBody<{ email: string }>>(
+    "/forgot/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        body: {
+          type: "object",
+          required: ["email"],
+          properties: {
+            email: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              email: { type: "string" },
+              expiresAt: { type: "number" },
+            },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findOne({
+        email: req.body.email.toLowerCase().trim(),
+        franchise: req.scope.franchise,
+      });
+      if (account && req.scope.franchise) {
+        await fastify.db.models.ForgotPasswordCode.updateMany(
+          { account: account._id, franchise: req.scope.franchise._id },
+          { isValid: false }
+        );
+        const simpleCode = short.generate().slice(0, 8);
+        const forgotPasswordCode =
+          await fastify.db.models.ForgotPasswordCode.create({
+            account: account._id,
+            franchise: req.scope.franchise._id,
+            code: await bcrypt.hash(
+              simpleCode,
+              parseInt(process.env.TEMP_AUTH_SALT)
+            ),
+            expiresAt: getUnixTime(add(new Date(), { hours: 1 })),
+          });
+        const messageInfo =
+          await fastify.mail.utils.sendForgotAdminPasswordEmail(
+            forgotPasswordCode,
+            simpleCode,
+            { hours: 1 }
+          );
+        if (messageInfo) {
+          forgotPasswordCode.messageId = messageInfo.messageId;
+          forgotPasswordCode.save();
+          reply.code(200).send({
+            email: account.email,
+            expiresAt: forgotPasswordCode.expiresAt,
+          });
+        } else {
+          reply
+            .code(500)
+            .send({ error: "Forgot password email could not be sent." });
+        }
+      } else {
+        reply.code(404).send({
+          error: "An admin account with that email address could not be found.",
+        });
+      }
+    }
+  );
+
+  fastify.post<RouteWithBody<{ email: string; code: string }>>(
+    "/forgot/redeem/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        body: {
+          type: "object",
+          required: ["email", "code"],
+          properties: {
+            email: { type: "string" },
+            code: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            email: { type: "string" },
+            codeId: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findOne({
+        email: req.body.email.trim().toLowerCase(),
+        franchise: req.scope.franchise,
+      });
+      if (account) {
+        const forgotPasswordCode =
+          await fastify.db.models.ForgotPasswordCode.findOne({
+            account,
+            franchise: req.scope.franchise,
+            expiresAt: { $gt: getUnixTime(new Date()) },
+            isValid: true,
+          });
+        if (forgotPasswordCode) {
+          const isValid = await bcrypt.compare(
+            req.body.code,
+            forgotPasswordCode.code
+          );
+          if (isValid) {
+            forgotPasswordCode.isRedeemed = true;
+            forgotPasswordCode.save();
+            reply
+              .code(200)
+              .send({ codeId: forgotPasswordCode._id, email: account.email });
+          } else {
+            reply.code(400).send({ error: "The code provided was not valid." });
+          }
+        } else {
+          reply.code(404).send({
+            error:
+              "A forgot password request for this admin account could not be found.",
+          });
+        }
+      } else {
+        reply.code(404).send({
+          error: "An admin account with that email address could not be found.",
+        });
+      }
+    }
+  );
+
+  fastify.get<RouteWithQuery<{ id: string }>>(
+    "/forgot/check/:id",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        querystring: {
+          id: { type: "string" },
+        },
+        response: {
+          200: {
+            email: { type: "string" },
+            isValid: { type: "boolean" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const forgotPasswordCode =
+        await fastify.db.models.ForgotPasswordCode.findById(req.params.id);
+      if (forgotPasswordCode) {
+        const account = await fastify.db.models.AdminAccount.findById(
+          forgotPasswordCode.account
+        );
+        if (
+          account &&
+          forgotPasswordCode.isRedeemed &&
+          forgotPasswordCode.isValid &&
+          !forgotPasswordCode.changedPassword &&
+          forgotPasswordCode.expiresAt > getUnixTime(new Date())
+        ) {
+          reply.code(200).send({ email: account.email, isValid: true });
+        } else {
+          reply
+            .code(400)
+            .send({ email: account ? account.email : "", isValid: false });
+        }
+      } else {
+        reply.code(400).send({ email: "", isValid: false });
+      }
+    }
+  );
+
+  fastify.post<
+    RouteWithBody<{ code: string; password: string; confirm: string }>
+  >(
+    "/forgot/change/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        body: {
+          code: { type: "string" },
+          password: { type: "string" },
+          confirm: { type: "string" },
+        },
+        response: {
+          200: {
+            email: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const forgotPasswordCode =
+        await fastify.db.models.ForgotPasswordCode.findById(req.body.code);
+      if (forgotPasswordCode) {
+        const account = await fastify.db.models.AdminAccount.findById(
+          forgotPasswordCode.account
+        );
+        if (account && forgotPasswordCode.isRedeemed) {
+          if (forgotPasswordCode.expiresAt < getUnixTime(new Date())) {
+            reply
+              .code(400)
+              .send({ error: "Forgot password code has expired." });
+          } else if (req.body.password !== req.body.confirm) {
+            reply.code(400).send({ error: "Passwords do not match." });
+          } else if (
+            !/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(
+              req.body.password.trim()
+            )
+          ) {
+            reply.code(400).send({
+              error:
+                "Password is not secure enough. New Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number. The new password must also be at least 8 characters long.",
+            });
+          } else {
+            const isOldPassword = await bcrypt.compare(
+              req.body.password,
+              account.password
+            );
+            if (isOldPassword) {
+              reply.code(400).send({
+                error: "New password cannot be the same as your old password.",
+              });
+            } else {
+              forgotPasswordCode.changedPassword = true;
+              forgotPasswordCode.isValid = false;
+              forgotPasswordCode.save();
+              account.password = await bcrypt.hash(
+                req.body.password.trim(),
+                parseInt(process.env.SALT_ROUNDS, 10)
+              );
+              account.save();
+              reply.code(200).send({ email: account.email });
+            }
+          }
+        } else {
+          reply
+            .code(404)
+            .send({ error: "The change password request could not be found." });
+        }
+      } else {
+        reply.code(404).send({
+          error: "The change password request could not be found.",
+        });
+      }
     }
   );
 }

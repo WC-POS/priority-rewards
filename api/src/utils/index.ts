@@ -1,13 +1,13 @@
-import { getUnixTime } from "date-fns";
 import { FastifyRequest } from "fastify";
 import { File } from "fastify-multer/lib/interfaces";
 import { RouteGenericInterface } from "fastify/types/route";
-import { FranchiseDocument } from "../models/franchises";
-import { LocationDocument } from "../models/locations";
+import { getUnixTime } from "date-fns";
 
 export type doneFn = (err?: Error) => void;
 
-export const getUnixTimestamp = () => getUnixTime(new Date());
+export const getUnixTimestamp = () => {
+  return getUnixTime(new Date());
+};
 
 export interface TimestampAttrs {
   createdAt: number;
@@ -31,6 +31,10 @@ export interface GetByIdQueryRoute extends RouteGenericInterface {
 
 export interface RouteWithBody<T> extends RouteGenericInterface {
   Body: T;
+}
+
+export interface RouteWithQuery<T> extends RouteGenericInterface {
+  Params: T;
 }
 
 export interface RouteWithAPIHeaders extends RouteGenericInterface {
