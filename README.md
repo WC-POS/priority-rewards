@@ -6,7 +6,7 @@
 - No one else 😭
 
 ## What is it?
----
+
 Priority Rewards is a simple loyalty application developed from the ground up for [FuturePOS](https://futurepos.com) users and customers. The goal is create more engagement between restaurants and their customers, promoting healthier, more mutually beneficial relationships that can sustainably survive for years.
 
 *Note:* Before running any component script, ensure that [Caddy](https://caddyserver.com/) is running within the root directory. All of the components rely on subdomains that are only accessible during local development via caddy reverse proxies.
@@ -17,8 +17,6 @@ caddy
 ```
 
 ## Compoments
-
----
 
 ### 🟢 API
 A Fastify web service connected to MongoDB using the fantastic Mongoose package. Of course, TypeScript is the 
@@ -62,6 +60,11 @@ yarn dev
 
 ### 🟢 Admin Web Applicaiton
 Another NextJS project, currently in JS, but shortly being moved to TS. Styling and components are built using [Chakra UI](https://chakra-ui.com/). Most of the actions performed here are done via the API REST endpoints.
+
+**Current Feature Tasks**
+- [ ] Add Admin Account management pages and functions
+- [ ] Add more advanced Accounts view and management functions
+- [ ] Add promotion related pages and functions
 
 **Start Admin Server**
 ```bash
