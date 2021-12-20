@@ -1,10 +1,9 @@
-import { FastifyInstance } from "fastify";
-import { FastifyPluginAsync, FastifyPluginOptions } from "fastify";
-import fp from "fastify-plugin";
-import { Module } from "module";
-import mongoose, { Schema, SchemaType, Types } from "mongoose";
 // Models
 import { AdminAccount, AdminAccountModel } from "../models/admin-accounts";
+import {
+  AdminAccountRegistrationCode,
+  AdminAccountRegistrationCodeModel,
+} from "../models/admin-account-registration-code";
 import { AdminSession, AdminSessionModel } from "../models/admin-sessions";
 import {
   AdminTempAuthCode,
@@ -16,17 +15,27 @@ import {
   FPOSDepartmentModel,
 } from "../models/fpos-departments";
 import { FPOSItem, FPOSItemModel } from "../models/fpos-items";
+import { FastifyPluginAsync, FastifyPluginOptions } from "fastify";
+import {
+  ForgotPasswordCode,
+  ForgotPasswordCodeModel,
+} from "../models/forgot-password-code";
 import { Franchise, FranchiseModel } from "../models/franchises";
 import { Location, LocationModel } from "../models/locations";
 import { POSAPIKey, POSAPIKeyModel } from "../models/pos-api-key";
-import { UserSession, UserSessionModel } from "../models/user-sessions";
 import { User, UserModel } from "../models/users";
+import { UserSession, UserSessionModel } from "../models/user-sessions";
+import mongoose, { Schema, SchemaType, Types } from "mongoose";
+
+import fp from "fastify-plugin";
 
 export interface Models {
   AdminAccount: AdminAccountModel;
+  AdminAccountRegistrationCode: AdminAccountRegistrationCodeModel;
   AdminSession: AdminSessionModel;
   AdminTempAuthCode: AdminTempAuthCodeModel;
   Club: ClubModel;
+  ForgotPasswordCode: ForgotPasswordCodeModel;
   FPOSDepartment: FPOSDepartmentModel;
   FPOSItem: FPOSItemModel;
   Franchise: FranchiseModel;
@@ -120,9 +129,11 @@ const connect: FastifyPluginAsync<MongoosePluginOptions> = async (
     await mongoose.connect(options.uri, options.connectionSettings);
     const models: Models = {
       AdminAccount,
+      AdminAccountRegistrationCode,
       AdminSession,
       AdminTempAuthCode,
       Club,
+      ForgotPasswordCode,
       FPOSDepartment,
       FPOSItem,
       Franchise,
