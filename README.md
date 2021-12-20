@@ -16,7 +16,7 @@ Priority Rewards is a simple loyalty application developed from the ground up fo
 caddy
 ```
 
-## Compoments
+## Components
 
 ### 🟢 API
 A Fastify web service connected to MongoDB using the fantastic Mongoose package. Of course, TypeScript is the 
