@@ -6,7 +6,8 @@
   "license": "UNLICENSED",
   "private": false,
   "scripts": {
-    "dev": "concurrently -n \"FAST,TSC \" -c \"gray,blue\" \"nodemon dist/server.js\" \"tsc -w --preserveWatchOutput \" --default-input-target=0 -i"
+    "dev": "concurrently --restart-after=500  -n \"FAST,TSC \" -c \"gray,blue\" \"nodemon --delay 1000ms dist/server.js\" \"tsc -w --preserveWatchOutput \" --default-input-target=0 -i",
+    "kill": "kill -15 $(lsof -ti:8000)"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.40.0",
