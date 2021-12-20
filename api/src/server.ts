@@ -1,12 +1,11 @@
+import db from "./plugins/mongoose-driver";
 import { fastify } from "fastify";
 import fastifyJwt from "fastify-jwt";
 import fastifyLog from "fastify-log";
+import nodemailerDriver from "./plugins/nodemailer-driver";
+import path from "path";
 import pino from "pino";
 import pinoColada from "pino-colada";
-import path from "path";
-
-import db from "./plugins/mongoose-driver";
-import nodemailerDriver from "./plugins/nodemailer-driver";
 import s3driver from "./plugins/s3-driver";
 
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
@@ -62,6 +61,7 @@ const start = async () => {
       },
     });
     app.register(nodemailerDriver, {
+      name: process.env.EMAIL_NAME,
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT),
       secure: Boolean(process.env.EMAIL_SECURE),

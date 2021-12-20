@@ -12,6 +12,7 @@ declare global {
       MONGO_PASSWORD: string;
       MONGO_SERVER: string;
       MONGO_USER: string;
+      EMAIL_NAME: string;
       EMAIL_HOST: string;
       EMAIL_PORT: string;
       EMAIL_SECURE: string;
