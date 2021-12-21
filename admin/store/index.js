@@ -1,5 +1,6 @@
-import create from "zustand";
 import { devtools, persist } from "zustand/middleware";
+
+import create from "zustand";
 
 let apiStore = (set, get) => ({
   api: {
@@ -8,6 +9,38 @@ let apiStore = (set, get) => ({
       key: null,
       expiresAt: null,
     },
+  },
+  fetchDelete: async (endpoint, body = null) => {
+    const urlPoints = endpoint
+      .trim()
+      .split("/")
+      .filter((urlPoint) => urlPoint !== "");
+    const state = get();
+    let payload = {};
+    try {
+      const params = {
+        method: "DELETE",
+        headers: {
+          authorization: `Bearer ${state.token.key}`,
+        },
+        body: body ? JSON.stringify(body) : JSON.stringify({}),
+      };
+      const res = await fetch(
+        `https://${state.slug}.${
+          process.env.NEXT_PUBLIC_API_HOST
+        }/${urlPoints.join("/")}/`,
+        params
+      );
+      try {
+        const data = await res.json();
+        payload = { status: res.status, ok: res.ok, body: data, error: null };
+      } catch (err) {
+        payload = { status: res.status, ok: res.ok, body: {}, error: err };
+      }
+    } catch (err) {
+      payload = { status: 999, ok: false, body: {}, error: err };
+    }
+    return payload;
   },
   fetchGet: async (endpoint, body = null) => {
     const urlPoints = endpoint
