@@ -41,8 +41,7 @@ function buildNewAdminAccountEmail(
         "/auth/register?email=" +
         account.email +
         "&code=" +
-        code +
-        "/"
+        code
     )}">Register Here</a>
     <br />
     <p>Your registration code is ${code}</p>
