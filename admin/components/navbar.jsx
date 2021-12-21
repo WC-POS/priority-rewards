@@ -52,7 +52,7 @@ const FranchiseGroup = () => {
           Locations
         </MenuItem>
       </NextLink>
-      <NextLink href="/franchise/users/" passHref>
+      <NextLink href="/franchise/accounts/" passHref>
         <MenuItem icon={<UilUsersAlt />} as="a">
           Admin Users
         </MenuItem>
