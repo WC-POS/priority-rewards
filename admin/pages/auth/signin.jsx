@@ -1,6 +1,3 @@
-import NextLink from "next/link";
-import router, { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import {
   Button,
   FormControl,
@@ -12,13 +9,16 @@ import {
   Stack,
   Switch,
   Text,
-  useToast,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { UilEye, UilEyeSlash } from "@iconscout/react-unicons";
+import router, { useRouter } from "next/router";
+import { useAPIStore, useAccountStore, useFranchiseStore } from "../../store";
+import { useEffect, useState } from "react";
 
 import Blank from "../../layouts/blank";
-import { useAccountStore, useAPIStore, useFranchiseStore } from "../../store";
+import NextLink from "next/link";
 
 const SignIn = (props) => {
   const [email, setEmail] = useState("");
@@ -111,7 +111,6 @@ const SignIn = (props) => {
       w="100vw"
       h="100vh"
       p={4}
-      bgColor="gray.50"
       alignItems="center"
       justifyContent="center"
     >

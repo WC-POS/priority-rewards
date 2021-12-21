@@ -1,9 +1,9 @@
 import { Container, Stack } from "@chakra-ui/react";
+import { useAPIStore, useAccountStore, useFranchiseStore } from "../store";
 import { useEffect, useState } from "react";
 
 import Navbar from "../components/navbar";
 import Redirect from "../components/util/redirect";
-import { useAccountStore, useAPIStore, useFranchiseStore } from "../store";
 
 const Layout = ({ children }) => {
   const account = useAccountStore((state) => state.account);
@@ -76,7 +76,6 @@ const Layout = ({ children }) => {
         w="100vw"
         minH="100vh"
         spacing={4}
-        bg="gray.100"
         alignItems="start"
         justifyContent="start"
       >

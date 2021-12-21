@@ -119,7 +119,6 @@ const Forgot = (props) => {
       w="100vw"
       h="100vh"
       p={4}
-      bgColor="gray.50"
       alignItems="center"
       justifyContent="center"
     >
@@ -164,7 +163,7 @@ const Forgot = (props) => {
               <PopoverCloseButton />
               <PopoverHeader>Are you sure?</PopoverHeader>
               <PopoverBody bg="white">
-                Is that the correct email address? It seems awfully close to
+                Is that the correct email address? It seems very close to
                 <Text color="blue.500" decoration="underline">
                   {suggestion}
                 </Text>

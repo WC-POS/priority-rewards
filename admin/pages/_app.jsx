@@ -1,11 +1,9 @@
-import Head from "next/head";
-import Router from "next/router";
-
 import { ChakraProvider } from "@chakra-ui/react";
 import Custom404 from "./404";
-import NProgress from "nprogress";
-
+import Head from "next/head";
 import Layout from "../layouts";
+import NProgress from "nprogress";
+import Router from "next/router";
 
 Router.events.on("routeChangeStart", () => NProgress.start());
 Router.events.on("routeChangeComplete", () => NProgress.done());
@@ -22,6 +20,7 @@ const App = ({ Component, pageProps }) => {
     <>
       <Head>
         <link rel="stylesheet" type="text/css" href="/css/nprogress.css" />
+        <link rel="stylesheet" type="text/css" href="/css/base.css" />
       </Head>
       <ChakraProvider>
         {getLayout(
