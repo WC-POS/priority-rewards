@@ -785,4 +785,176 @@ export default async function (
       }
     }
   );
+
+  fastify.post<RouteWithBody<{ email: string; code: string }>>(
+    "/register/redeem/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        body: {
+          type: "object",
+          required: ["email", "code"],
+          properties: {
+            email: { type: "string" },
+            code: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            email: { type: "string" },
+            codeId: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findOne({
+        email: req.body.email.trim().toLowerCase(),
+        franchise: req.scope.franchise,
+      });
+      if (account) {
+        const adminRegistrationCode =
+          await fastify.db.models.AdminAccountRegistrationCode.findOne({
+            account,
+            franchise: req.scope.franchise,
+            expiresAt: { $gt: getUnixTime(new Date()) },
+            isValid: true,
+            createdAccount: false,
+          });
+        if (adminRegistrationCode) {
+          const isValid = await bcrypt.compare(
+            req.body.code,
+            adminRegistrationCode.code
+          );
+          if (isValid) {
+            adminRegistrationCode.isRedeemed = true;
+            adminRegistrationCode.save();
+            reply.code(200).send({
+              codeId: adminRegistrationCode._id,
+              email: account.email,
+            });
+          } else {
+            reply.code(400).send({ error: "The code provided was not valid." });
+          }
+        } else {
+          reply.code(404).send({
+            error:
+              "A forgot password request for this admin account could not be found.",
+          });
+        }
+      } else {
+        reply.code(404).send({
+          error: "An admin account with that email address could not be found.",
+        });
+      }
+    }
+  );
+
+  fastify.get<RouteWithParams<{ id: string }>>(
+    "/register/check/:id/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        response: {
+          200: {
+            email: { type: "string" },
+            isValid: { type: "boolean" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      console.log(req.params.id);
+      const adminRegistrationCode =
+        await fastify.db.models.AdminAccountRegistrationCode.findById(
+          req.params.id
+        );
+      if (adminRegistrationCode) {
+        const account = await fastify.db.models.AdminAccount.findById(
+          adminRegistrationCode.account
+        );
+        if (
+          account &&
+          adminRegistrationCode.isRedeemed &&
+          adminRegistrationCode.isValid &&
+          !adminRegistrationCode.createdAccount &&
+          adminRegistrationCode.expiresAt > getUnixTime(new Date())
+        ) {
+          reply.code(200).send({ email: account.email, isValid: true });
+        } else {
+          reply
+            .code(400)
+            .send({ email: account ? account.email : "", isValid: false });
+        }
+      } else {
+        reply.code(400).send({ email: "", isValid: false });
+      }
+    }
+  );
+
+  fastify.post<
+    RouteWithBody<{ code: string; password: string; confirm: string }>
+  >(
+    "/register/change/",
+    {
+      preValidation: [fastify.guards.isPublic],
+      schema: {
+        body: {
+          code: { type: "string" },
+          password: { type: "string" },
+          confirm: { type: "string" },
+        },
+        response: {
+          200: {
+            email: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const adminRegistrationCode =
+        await fastify.db.models.AdminAccountRegistrationCode.findById(
+          req.body.code
+        );
+      if (adminRegistrationCode) {
+        const account = await fastify.db.models.AdminAccount.findById(
+          adminRegistrationCode.account
+        );
+        if (account && adminRegistrationCode.isRedeemed) {
+          if (adminRegistrationCode.expiresAt < getUnixTime(new Date())) {
+            reply.code(400).send({ error: "Registration code has expired." });
+          } else if (req.body.password !== req.body.confirm) {
+            reply.code(400).send({ error: "Passwords do not match." });
+          } else if (
+            !/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(
+              req.body.password.trim()
+            )
+          ) {
+            reply.code(400).send({
+              error:
+                "Password is not secure enough. New Password must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number. The new password must also be at least 8 characters long.",
+            });
+          } else {
+            adminRegistrationCode.createdAccount = true;
+            adminRegistrationCode.isValid = false;
+            adminRegistrationCode.save();
+            account.password = await bcrypt.hash(
+              req.body.password.trim(),
+              parseInt(process.env.SALT_ROUNDS, 10)
+            );
+            account.save();
+            reply.code(200).send({ email: account.email });
+          }
+        } else {
+          reply
+            .code(404)
+            .send({ error: "The change password request could not be found." });
+        }
+      } else {
+        reply.code(404).send({
+          error: "The change password request could not be found.",
+        });
+      }
+    }
+  );
 }

@@ -10,7 +10,9 @@ export interface AdminAccountRegistraionCodeAttrs {
   franchise: PopulatedDoc<FranchiseDocument>;
   code: string;
   expiresAt: number;
-  isValid: number;
+  isValid: boolean;
+  isRedeemed: boolean;
+  createdAccount: boolean;
   messageId: string;
 }
 
@@ -28,7 +30,9 @@ export const adminAccountRegistrationCodeSchema = new Schema(
     franchise: { type: Types.ObjectId, ref: "franchises" },
     code: String,
     expiresAt: Number,
+    isRedeemed: { type: Boolean, default: false },
     isValid: { type: Boolean, default: true },
+    createdAccount: { type: Boolean, default: false },
     messageId: { type: String, nullable: true, default: null },
   },
   {
