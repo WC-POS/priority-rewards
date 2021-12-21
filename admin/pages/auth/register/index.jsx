@@ -7,20 +7,19 @@ import {
   Stack,
   Text,
   VStack,
-  useToast,
 } from "@chakra-ui/react";
+import React, { useState } from "react";
 
 import Blank from "../../../layouts/blank";
 import NextLink from "next/link";
-import { useRouter } from "next/router";
-import { useState } from "react";
+import { getFranchiseData } from "../../../lib/ssr/getFranchise";
+import { getSlug } from "../../../lib/ssr/getSlug";
+import router from "next/router";
 
-const Redeem = (props) => {
-  const toast = useToast();
-  const [code, setCode] = useState(props.query.code || "");
-  const [email, setEmail] = useState(props.query.email || "");
+const Register = (props) => {
+  const [code, setCode] = useState(props.code || "");
+  const [email, setEmail] = useState(props.email || "");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const verify = async (e) => {
     e.preventDefault();
@@ -33,7 +32,7 @@ const Redeem = (props) => {
       try {
         setIsLoading(true);
         const res = await fetch(
-          `https://${props.franchise.slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/auth/forgot/redeem/`,
+          `https://${props.franchise.slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/auth/register/redeem/`,
           {
             method: "POST",
             headers: {
@@ -49,7 +48,7 @@ const Redeem = (props) => {
         if (res.ok) {
           setIsLoading(false);
           router.push({
-            pathname: "/auth/forgot/change/",
+            pathname: "/auth/register/change/",
             query: {
               email: body.email,
               codeId: body.codeId,
@@ -70,7 +69,7 @@ const Redeem = (props) => {
         setIsLoading(false);
         toast({
           title: "Uh oh...",
-          description: "Something went wrong",
+          description: "Something went wrong.",
           status: "error",
           duration: 10000,
           isClosable: true,
@@ -115,7 +114,7 @@ const Redeem = (props) => {
             {props.franchise.displayTitle.title}
           </Text>
           <Heading size="lg" align="center" w="full">
-            Verify Password Code
+            Register Account
           </Heading>
         </VStack>
         <FormControl isRequired as="fieldset">
@@ -148,30 +147,25 @@ const Redeem = (props) => {
   );
 };
 
-Redeem.getLayout = (page) => {
+Register.getLayout = (page) => {
   return <Blank>{page}</Blank>;
 };
 
 export async function getServerSideProps(context) {
-  const slug = context.req.headers.host.toLowerCase().split(".")[0];
-  if (slug !== "admin") {
-    const url = `https://${slug}.${process.env.NEXT_PUBLIC_API_HOST}/admin/franchise/`;
-    const res = await fetch(url);
-    const franchiseData = await res.json();
-    if (franchiseData === null) {
-      context.res.statusCode = 404;
-      return {};
-    } else {
-      return { props: { franchise: franchiseData, query: context.query } };
-    }
-  } else {
+  const franchise = await getFranchiseData(context);
+  const slug = getSlug(context);
+  console.log(context.query);
+  if (franchise && franchise.slug !== "admin") {
     return {
       props: {
-        franchise: require("../../../lib/constants/admin-franchise.json"),
-        query: context.query,
+        franchise,
+        code: context.query.code,
+        email: context.query.email,
       },
     };
+  } else {
+    return { props: { statusCode: 404 } };
   }
 }
 
-export default Redeem;
+export default Register;
