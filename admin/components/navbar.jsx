@@ -1,6 +1,3 @@
-import NextLink from "next/link";
-import { useRouter } from "next/router";
-
 import {
   Avatar,
   Box,
@@ -38,12 +35,14 @@ import {
   UilTachometerFastAlt,
   UilTicket,
   UilTrophy,
-  UilUsersAlt,
   UilUserCircle,
+  UilUsersAlt,
 } from "@iconscout/react-unicons";
+import { useAPIStore, useAccountStore, useFranchiseStore } from "../store";
 
-import { useAccountStore, useAPIStore, useFranchiseStore } from "../store";
+import NextLink from "next/link";
 import NotificationsDrawer from "./notifications-drawer";
+import { useRouter } from "next/router";
 
 const FranchiseGroup = () => {
   return (
@@ -240,7 +239,11 @@ const Navbar = () => {
               _focus={{ boxShadow: "none" }}
             >
               <HStack>
-                <Avatar size={"sm"} name="Devin Sharpe" bgColor="gray.200" />
+                <Avatar
+                  size={"sm"}
+                  name={`${account.firstName} ${account.lastName}`}
+                  bgColor="gray.200"
+                />
                 <VStack
                   display={{ base: "none", md: "flex" }}
                   alignItems="flex-start"
