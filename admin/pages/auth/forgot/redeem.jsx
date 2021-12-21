@@ -93,7 +93,6 @@ const Redeem = (props) => {
       w="100vw"
       h="100vh"
       p={4}
-      bgColor="gray.50"
       alignItems="center"
       justifyContent="center"
     >
