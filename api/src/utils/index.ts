@@ -33,7 +33,7 @@ export interface RouteWithBody<T> extends RouteGenericInterface {
   Body: T;
 }
 
-export interface RouteWithQuery<T> extends RouteGenericInterface {
+export interface RouteWithParams<T> extends RouteGenericInterface {
   Params: T;
 }
 
