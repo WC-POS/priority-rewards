@@ -2,7 +2,7 @@ import {
   AdminAccountAttrs,
   AdminAccountDocument,
 } from "../../models/admin-accounts";
-import { AdminSessionJWT, RouteWithBody, RouteWithQuery } from "../../utils";
+import { AdminSessionJWT, RouteWithBody, RouteWithParams } from "../../utils";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { PaginateOptions, paginate } from "../../utils/paginate";
 import { add, getUnixTime } from "date-fns";
@@ -95,6 +95,106 @@ export default async function (
     }
   );
 
+  fastify.get<RouteWithParams<{ id: string }>>(
+    "/account/:id/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              _id: { type: "string" },
+              firstName: { type: "string" },
+              lastName: { type: "string" },
+              email: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findById(
+        req.params.id
+      );
+      if (account) {
+        reply.code(200).send(account);
+      } else {
+        reply
+          .code(404)
+          .send({ error: "This admin account could not be found." });
+      }
+    }
+  );
+
+  fastify.put<
+    RouteWithBody<{
+      firstName: string;
+      lastName: string;
+    }> &
+      RouteWithParams<{ id: string }>
+  >(
+    "/account/:id/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        body: {
+          firstName: { type: "string" },
+          lastName: { type: "string" },
+        },
+        response: {
+          200: {
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            email: { type: "string" },
+            _id: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      );
+      if (account) {
+        reply.code(200).send(account.toJSON());
+      } else {
+        reply
+          .code(404)
+          .send({ error: "This admin account could not be found." });
+      }
+    }
+  );
+
+  fastify.delete<RouteWithParams<{ id: string }>>(
+    "/account/:id/",
+    {
+      preValidation: [fastify.guards.isAdminAuthenticated],
+      schema: {
+        response: {
+          200: {
+            _id: { type: "string" },
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            email: { type: "string" },
+          },
+        },
+      },
+    },
+    async function (req, reply) {
+      const account = await fastify.db.models.AdminAccount.findByIdAndDelete(
+        req.params.id
+      );
+      if (account) {
+        reply.code(200).send(account);
+      } else {
+        reply.code(404).send({ error: "This admin account not be found." });
+      }
+    }
+  );
+
   fastify.get<RouteWithBody<PaginateOptions>>(
     "/accounts/",
     {
@@ -105,12 +205,19 @@ export default async function (
         },
         response: {
           200: {
-            $ref: "list-page-response#",
+            type: "object",
             properties: {
+              ...require("../../schema/list-page-response").properties,
               results: {
                 type: "array",
                 items: {
-                  ref: "Models-AdminAccount",
+                  type: "object",
+                  properties: {
+                    email: { type: "string" },
+                    lastName: { type: "string" },
+                    firstName: { type: "string" },
+                    _id: { type: "string" },
+                  },
                 },
               },
             },
@@ -561,7 +668,7 @@ export default async function (
     }
   );
 
-  fastify.get<RouteWithQuery<{ id: string }>>(
+  fastify.get<RouteWithParams<{ id: string }>>(
     "/forgot/check/:id",
     {
       preValidation: [fastify.guards.isPublic],

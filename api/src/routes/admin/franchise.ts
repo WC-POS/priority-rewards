@@ -1,16 +1,15 @@
-import fs from "fs";
-
-import bcrypt from "bcrypt";
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest } from "fastify";
-import { Types } from "mongoose";
-import short from "short-uuid";
-import { v4 } from "uuid";
+import { GetByIdQueryRoute, RequestWithFile, RouteWithBody } from "../../utils";
+import { LocationAttrs, LocationDocument } from "../../models/locations";
+import { PaginateOptions, paginate } from "../../utils/paginate";
 
 import { FranchiseAttrs } from "../../models/franchises";
-import { LocationAttrs, LocationDocument } from "../../models/locations";
 import { POSOptions } from "../../models/pos-api-key";
-import { GetByIdQueryRoute, RequestWithFile, RouteWithBody } from "../../utils";
-import { paginate, PaginateOptions } from "../../utils/paginate";
+import { Types } from "mongoose";
+import bcrypt from "bcrypt";
+import fs from "fs";
+import short from "short-uuid";
+import { v4 } from "uuid";
 
 export default async function (
   fastify: FastifyInstance,
@@ -367,8 +366,8 @@ export default async function (
         response: {
           200: {
             type: "object",
-            $ref: "list-page-response",
             properties: {
+              ...require("../../schema/list-page-response").properties,
               results: {
                 type: "array",
                 items: {

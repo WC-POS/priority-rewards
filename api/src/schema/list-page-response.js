@@ -4,6 +4,5 @@ module.exports = {
     count: { type: "number" },
     page: { type: "number" },
     maxPage: { type: "number" },
-    results: { type: "array" },
   },
 };
