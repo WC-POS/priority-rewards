@@ -159,8 +159,8 @@ export async function getServerSideProps(context) {
     return {
       props: {
         franchise,
-        code: context.query.code,
-        email: context.query.email,
+        code: context.query.code || "",
+        email: context.query.email || "",
       },
     };
   } else {

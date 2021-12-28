@@ -219,7 +219,7 @@ const Change = (props) => {
           </InputGroup>
         </FormControl>
         <Button w="full" colorScheme="blue" isLoading={isLoading} type="submit">
-          Check Code
+          Set Password
         </Button>
         <NextLink href="/auth/signin" passHref>
           <Button variant="ghost" size="sm" as="a">

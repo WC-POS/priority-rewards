@@ -198,11 +198,19 @@ const SignIn = (props) => {
           <span>Sign In</span>
         </Button>
 
-        <NextLink href="/auth/forgot" passHref>
-          <Button variant="ghost" size="sm" as="a">
-            Forgot Password?
-          </Button>
-        </NextLink>
+        <Stack direction="row" alignItems="center" w="full">
+          <NextLink href="/auth/register/" passHref>
+            <Button variant="ghost" size="sm" as="a" w="full">
+              Create Account?
+            </Button>
+          </NextLink>
+
+          <NextLink href="/auth/forgot" passHref>
+            <Button variant="ghost" size="sm" as="a" w="full">
+              Forgot Password?
+            </Button>
+          </NextLink>
+        </Stack>
       </VStack>
     </Stack>
   );
