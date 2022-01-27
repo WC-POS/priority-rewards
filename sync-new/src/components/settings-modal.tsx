@@ -12,18 +12,28 @@ import {
   TabPanels,
   Tabs,
 } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
 
 import AppForm from "./app-form";
 import CloudForm from "./cloud-form";
+import { Config } from "../types";
 import EmailForm from "./email-form";
 import FposForm from "./fpos-form";
-import React from "react";
 import { UilSetting } from "@iconscout/react-unicons";
 
 const SettingsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-}> = ({ isOpen, onClose }) => {
+  config: Config;
+}> = ({ config, isOpen, onClose }) => {
+  const [configDraft, setConfigDraft] = useState({ ...config });
+
+  useEffect(() => {
+    if (isOpen) {
+      setConfigDraft({ ...config });
+    }
+  }, [isOpen, setConfigDraft]);
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -85,37 +95,34 @@ const SettingsModal: React.FC<{
             <TabPanels>
               <TabPanel>
                 <FposForm
-                  data={{
-                    host: "localhost\\CESSQL",
-                    user: "sa",
-                    password: "Password#1234",
-                    db: "testing",
-                  }}
+                  data={configDraft.fpos}
+                  onChange={(val) =>
+                    setConfigDraft({ ...configDraft, fpos: val })
+                  }
                 />
               </TabPanel>
               <TabPanel>
                 <AppForm
-                  data={{
-                    logOutput: "C:\\",
-                    quickSyncFrequency: 5,
-                    fullSyncTime: "04:00",
-                  }}
+                  data={configDraft.app}
+                  onChange={(val) =>
+                    setConfigDraft({ ...configDraft, app: val })
+                  }
                 />
               </TabPanel>
               <TabPanel>
                 <CloudForm
-                  data={{ publicKey: "1234567890", privateKey: "1234567890" }}
+                  data={configDraft.cloud}
+                  onChange={(val) =>
+                    setConfigDraft({ ...configDraft, cloud: val })
+                  }
                 />
               </TabPanel>
               <TabPanel>
                 <EmailForm
-                  data={{
-                    host: "www.gmail.com",
-                    user: "testing@gmail.com",
-                    password: "Password#1234",
-                    port: 465,
-                    useSSL: false,
-                  }}
+                  data={configDraft.email}
+                  onChange={(val) =>
+                    setConfigDraft({ ...configDraft, email: val })
+                  }
                 />
               </TabPanel>
             </TabPanels>
