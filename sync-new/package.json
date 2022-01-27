@@ -53,7 +53,10 @@
                 {
                   "html": "./src/index.html",
                   "js": "./src/renderer.ts",
-                  "name": "main_window"
+                  "name": "main_window",
+                  "preload": {
+                    "js": "./src/preload.ts"
+                  }
                 }
               ]
             }
@@ -71,6 +74,7 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "@electron-forge/plugin-webpack": "6.0.0-beta.63",
+    "@types/crypto-js": "^4.1.0",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
@@ -92,9 +96,15 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@iconscout/react-unicons": "^1.1.6",
+    "better-sqlite3": "^7.5.0",
+    "crypto-js": "^4.1.1",
     "electron-squirrel-startup": "^1.0.0",
     "framer-motion": "^5",
+    "futurepos-typed-models": "^1.0.0",
+    "getmac": "^5.20.0",
+    "mssql": "^7.3.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "typeorm": "^0.2.41"
   }
 }
